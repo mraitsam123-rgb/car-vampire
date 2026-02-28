@@ -7,13 +7,22 @@ export default function ListingDetail() {
   const [item, setItem] = useState(null)
   const [similarItems, setSimilarItems] = useState([])
   const [activeImage, setActiveImage] = useState(0)
+  const [daysLeft, setDaysLeft] = useState(null)
   const token = localStorage.getItem("accessToken")
   const [showPhone, setShowPhone] = useState(false)
 
   useEffect(() => {
     fetchListing(id).then(r => {
       setItem(r)
-      // Fetch similar ads in the same category
+      
+      // Calculate days left for 30-day expiry
+      if (r.expiresAt) {
+        const diff = new Date(r.expiresAt) - new Date()
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+        setDaysLeft(days > 0 ? days : 0)
+      }
+
+      // Fetch similar ads
       fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings?category=${r.category}&limit=4`)
         .then(res => res.json())
         .then(data => setSimilarItems(data.items?.filter(i => i._id !== r._id) || []))
@@ -64,7 +73,14 @@ export default function ListingDetail() {
           <div className="bg-white border rounded p-6 space-y-8">
             <div className="flex justify-between items-start border-b pb-6">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-gray-900">Rs {item.price?.toLocaleString()}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold text-gray-900">Rs {item.price?.toLocaleString()}</h1>
+                  {daysLeft !== null && daysLeft <= 10 && (
+                    <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded-full uppercase">
+                      ⚠️ Expiring in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
+                    </span>
+                  )}
+                </div>
                 <p className="text-lg text-gray-700 font-medium">{item.title}</p>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span className="flex items-center gap-1">📍 {item.city}</span>
@@ -184,17 +200,25 @@ export default function ListingDetail() {
             </div>
 
             <div className="space-y-3">
-              {showPhone ? (
-                <a href={`tel:${item.sellerId?.phone}`} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition">
-                  📞 {item.sellerId?.phone}
+              {item.phone && (
+                <a href={`tel:+92${item.phone}`} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition">
+                  📞 +92 {item.phone}
                 </a>
-              ) : (
-                <button 
-                  onClick={() => setShowPhone(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-indigo-900 text-indigo-900 font-bold rounded hover:bg-indigo-50 transition"
-                >
-                  📞 Show Phone Number
-                </button>
+              )}
+              
+              {!item.phone && (
+                showPhone ? (
+                  <a href={`tel:${item.sellerId?.phone}`} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition">
+                    📞 {item.sellerId?.phone}
+                  </a>
+                ) : (
+                  <button 
+                    onClick={() => setShowPhone(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-indigo-900 text-indigo-900 font-bold rounded hover:bg-indigo-50 transition"
+                  >
+                    📞 Show Phone Number
+                  </button>
+                )
               )}
               
               <Link to={`/chats?listingId=${item._id}`} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-indigo-900 text-indigo-900 font-bold rounded hover:bg-indigo-50 transition">
@@ -223,3 +247,4 @@ export default function ListingDetail() {
     </div>
   )
 }
+

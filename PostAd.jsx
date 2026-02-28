@@ -23,7 +23,7 @@ export default function PostAd() {
   const [form, setForm] = useState({
     title: "", price: "", city: "", description: "",
     make: "", model: "", year: "", mileage: "", 
-    propertyType: "", area: "", bedrooms: ""
+    propertyType: "", area: "", bedrooms: "", phone: ""
   })
   const [images, setImages] = useState([])
   const [uploading, setUploading] = useState(false)
@@ -44,6 +44,10 @@ export default function PostAd() {
     e.preventDefault()
     if (images.length === 0) {
       toast.error("Please upload at least one photo")
+      return
+    }
+    if (!form.phone || form.phone.length < 10) {
+      toast.error("Please enter a valid phone number")
       return
     }
     const loadingToast = toast.loading("Posting your ad...")
@@ -143,10 +147,25 @@ export default function PostAd() {
         )}
 
         <div className="space-y-4 pt-4 border-t">
-          <h3 className="font-bold text-lg">Price & Location</h3>
+          <h3 className="font-bold text-lg">Price & Contact</h3>
           <div className="grid grid-cols-2 gap-4">
             <input required type="number" placeholder="Price (Rs) *" className="border rounded px-3 py-2" value={form.price} onChange={e=>setForm({...form, price: e.target.value})} />
             <input required placeholder="City *" className="border rounded px-3 py-2" value={form.city} onChange={e=>setForm({...form, city: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1 text-indigo-900">Your Phone Number *</label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 border border-r-0 rounded-l bg-gray-50 text-gray-500 font-bold">+92</span>
+              <input 
+                required 
+                type="tel"
+                placeholder="3XXXXXXXXX" 
+                className="w-full border rounded-r px-3 py-2 focus:ring-indigo-900 focus:border-indigo-900" 
+                value={form.phone} 
+                onChange={e=>setForm({...form, phone: e.target.value.replace(/\D/g, '')})} 
+                maxLength={10}
+              />
+            </div>
           </div>
         </div>
 

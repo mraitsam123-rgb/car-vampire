@@ -53,14 +53,19 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
           <Link to="/" className="text-2xl font-bold text-indigo-900 shrink-0 hidden md:block">OLX</Link>
           <div className="ml-auto flex items-center gap-4">
-            <Link to="/login" className="font-bold border-b-2 border-indigo-900 hover:border-transparent transition">Login</Link>
+            {!me && (
+              <>
+                <Link to="/login" className="font-bold border-b-2 border-indigo-900 hover:border-transparent transition text-indigo-900">Login</Link>
+                <Link to="/signup" className="font-bold border-b-2 border-indigo-900 hover:border-transparent transition text-indigo-900">Sign Up</Link>
+              </>
+            )}
             <Link to="/post-ad" className="flex items-center gap-1 px-4 py-2 rounded-full border-4 border-t-yellow-400 border-l-blue-400 border-r-indigo-600 border-b-green-400 font-bold hover:bg-gray-50 transition">
               <span className="text-xl">+</span> SELL
             </Link>
             {me ? (
               <div className="flex items-center gap-3">
-                <Link to="/dashboard" className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-900 border-2 border-indigo-900">
-                  {me.avatar ? <img src={me.avatar} className="w-full h-full rounded-full object-cover" /> : me.name?.[0]}
+                <Link to="/dashboard" className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-900 border-2 border-indigo-900 overflow-hidden">
+                  {me.avatar ? <img src={me.avatar} className="w-full h-full object-cover" /> : me.name?.[0]}
                 </Link>
                 <button onClick={handleLogout} className="text-sm font-bold text-red-600 hover:underline">Logout</button>
               </div>
