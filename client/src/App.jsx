@@ -42,7 +42,7 @@ export default function App() {
             {me ? (
               <>
                 <Link to="/dashboard" className="px-3 py-2 border rounded">Dashboard</Link>
-                <button className="px-3 py-2 border rounded" onClick={() => {localStorage.removeItem(\"accessToken\"); navigate(0)}}>Logout</button>
+                <button className="px-3 py-2 border rounded" onClick={() => {localStorage.removeItem("accessToken"); navigate(0)}}>Logout</button>
               </>
             ) : (
               <>
