@@ -1,16 +1,27 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { fetchListings } from "../lib/api.js"
+import ListingCard from "../components/ListingCard.jsx"
 
 export default function Listings() {
   const { search } = useLocation()
+  const navigate = useNavigate()
   const qs = useMemo(() => Object.fromEntries(new URLSearchParams(search)), [search])
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 })
   const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     setLoading(true)
     fetchListings({ ...qs }).then(r => setData(r)).finally(() => setLoading(false))
   }, [search])
+
+  const updateFilter = (key, val) => {
+    const params = new URLSearchParams(search)
+    if (val) params.set(key, val)
+    else params.delete(key)
+    params.set('page', '1') // Reset to page 1 on filter change
+    navigate(`/listings?${params.toString()}`)
+  }
   return (
     <div className="bg-[#f7f8f8] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-12 gap-6">
@@ -136,33 +147,5 @@ export default function Listings() {
         </section>
       </div>
     </div>
-  )
-}
-
-function ListingCard({ it }) {
-  return (
-    <Link to={`/listings/${it._id}`} className="bg-white rounded-lg border-2 border-gray-100 hover:border-indigo-200 transition shadow-sm group overflow-hidden flex flex-col">
-      <div className="aspect-[4/3] relative bg-gray-50 overflow-hidden">
-        {it.images?.[0] ? (
-          <img 
-            src={typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url} 
-            alt={it.title} 
-            className="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-out" 
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
-        )}
-        <div className="absolute top-2 left-2 bg-yellow-400 text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">FEATURED</div>
-        <button className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full shadow hover:text-red-500 transition-colors">🤍</button>
-      </div>
-      <div className="p-4 flex-1 flex flex-col">
-        <div className="text-xl font-black text-indigo-900 mb-1">Rs {it.price?.toLocaleString()}</div>
-        <div className="text-sm text-gray-700 font-medium line-clamp-2 mb-4 flex-1">{it.title}</div>
-        <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider border-t pt-3">
-          <span className="truncate max-w-[60%]">📍 {it.city}</span>
-          <span>{new Date(it.createdAt).toLocaleDateString()}</span>
-        </div>
-      </div>
-    </Link>
   )
 }

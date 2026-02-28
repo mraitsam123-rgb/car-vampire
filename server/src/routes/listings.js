@@ -30,10 +30,11 @@ const createSchema = z.object({
   propertyType: z.string().optional(),
   area: z.string().optional(),
   bedrooms: z.number().optional(),
-  bathrooms: z.number().optional(),
-   isFurnished: z.boolean().optional(),
-   phone: z.string().optional()
- })
+    bathrooms: z.number().optional(),
+    isFurnished: z.boolean().optional(),
+    phone: z.string().optional(),
+    showWhatsApp: z.boolean().optional()
+  })
 
 router.post("/", authMiddleware, async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
@@ -88,6 +89,8 @@ router.put("/:id/images", authMiddleware, async (req, res) => {
 router.get("/", async (req, res) => {
   const {
     q,
+    category,
+    sellerId,
     make,
     model,
     city,
@@ -104,10 +107,22 @@ router.get("/", async (req, res) => {
     limit = 20
   } = req.query
   const filter = { status: "active" }
-  if (q) filter.$or = [{ title: new RegExp(q, "i") }, { description: new RegExp(q, "i") }]
+  if (q) {
+    const regex = new RegExp(q, "i")
+    filter.$or = [
+      { title: regex }, 
+      { description: regex }, 
+      { category: regex },
+      { make: regex },
+      { model: regex },
+      { city: regex }
+    ]
+  }
+  if (category) filter.category = category
+  if (sellerId) filter.sellerId = sellerId
   if (make) filter.make = make
   if (model) filter.model = model
-  if (city) filter.city = city
+  if (city) filter.city = new RegExp(city, "i") // Case insensitive city search
   if (transmission) filter.transmission = transmission
   if (fuelType) filter.fuelType = fuelType
   if (minPrice || maxPrice) filter.price = { ...(minPrice && { $gte: Number(minPrice) }), ...(maxPrice && { $lte: Number(maxPrice) }) }

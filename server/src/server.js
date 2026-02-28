@@ -4,9 +4,9 @@ import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
 import { connectDB } from "./utils/db.js"
 import { initUploads } from "./utils/upload.js"
+import { initCleanupJob } from "./utils/cleanup.js"
 import authRoutes from "./routes/auth.js"
 import listingRoutes from "./routes/listings.js"
-import favoriteRoutes from "./routes/favorites.js"
 import chatRoutes from "./routes/chats.js"
 import { authMiddleware } from "./utils/auth.js"
 import { loginLimiter } from "./utils/ratelimit.js"
@@ -20,6 +20,7 @@ const __dirname = path.dirname(__filename)
 dotenv.config()
 connectDB()
 initUploads()
+initCleanupJob()
 const app = express()
 
 // Trust proxy for Hugging Face/Vercel (required for express-rate-limit)
@@ -44,7 +45,6 @@ if (fs.existsSync(finalDistPath)) {
 app.use("/api/auth/login", loginLimiter)
 app.use("/api/auth", authRoutes)
 app.use("/api/listings", listingRoutes)
-app.use("/api/favorites", favoriteRoutes)
 app.use("/api/chats", authMiddleware, chatRoutes)
 app.get("/api/health", (req, res) => res.json({ ok: true }))
 

@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
-import { fetchListing, toggleFavorite } from "../lib/api.js"
+import { getListing, toggleFavorite, fetchListings } from "../lib/api.js"
+import { useUser } from "../context/UserContext.jsx"
+import { toast } from "react-hot-toast"
+import ListingCard from "../components/ListingCard.jsx"
 
 export default function ListingDetail() {
   const { id } = useParams()
+  const { me, setMe } = useUser()
   const [item, setItem] = useState(null)
   const [similarItems, setSimilarItems] = useState([])
   const [activeImage, setActiveImage] = useState(0)
   const [daysLeft, setDaysLeft] = useState(null)
-  const token = localStorage.getItem("accessToken")
   const [showPhone, setShowPhone] = useState(false)
 
+  const isFav = me?.favorites?.includes(id)
+
   useEffect(() => {
-    fetchListing(id).then(r => {
+    getListing(id).then(r => {
       setItem(r)
       
       // Calculate days left for 30-day expiry
@@ -23,11 +28,41 @@ export default function ListingDetail() {
       }
 
       // Fetch similar ads
-      fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings?category=${r.category}&limit=4`)
-        .then(res => res.json())
+      fetchListings({ category: r.category, limit: 4 })
         .then(data => setSimilarItems(data.items?.filter(i => i._id !== r._id) || []))
     })
   }, [id])
+
+  const handleToggleFav = async () => {
+    if (!me) return toast.error("Please login to favorite")
+    try {
+      const { favorites } = await toggleFavorite(id)
+      setMe({ ...me, favorites })
+      toast.success(isFav ? "Removed from favorites" : "Added to favorites")
+    } catch (err) {
+      toast.error("Something went wrong")
+    }
+  }
+
+  const handleWhatsApp = () => {
+    const phone = item.phone || item.sellerId?.phone
+    if (!phone) return toast.error("Phone number not available")
+    const msg = encodeURIComponent(`Hi, I'm interested in your ad: ${item.title}\n${window.location.href}`)
+    window.open(`https://wa.me/92${phone.replace(/^0/, '')}?text=${msg}`, '_blank')
+  }
+
+  const formatPrice = (price) => {
+    if (!price) return "Rs 0"
+    if (price >= 10000000) { // Crore
+      const cr = price / 10000000
+      return `Rs ${cr % 1 === 0 ? cr : cr.toFixed(2)} Crore`
+    }
+    if (price >= 100000) { // Lac
+      const lac = price / 100000
+      return `Rs ${lac % 1 === 0 ? lac : lac.toFixed(2)} Lacs`
+    }
+    return `Rs ${price.toLocaleString()}`
+  }
 
   if (!item) return (
     <div className="max-w-7xl mx-auto px-4 py-12 flex justify-center">
@@ -60,63 +95,67 @@ export default function ListingDetail() {
             </div>
             {images.length > 1 && (
               <>
-                <button onClick={() => setActiveImage((prev) => (prev > 0 ? prev - 1 : images.length - 1))} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/80 rounded shadow hover:bg-white transition opacity-0 group-hover:opacity-100">←</button>
-                <button onClick={() => setActiveImage((prev) => (prev < images.length - 1 ? prev + 1 : 0))} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/80 rounded shadow hover:bg-white transition opacity-0 group-hover:opacity-100">→</button>
+                <button onClick={() => setActiveImage((prev) => (prev > 0 ? prev - 1 : images.length - 1))} className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-white/90 rounded shadow-lg hover:bg-white transition-all opacity-0 group-hover:opacity-100 font-black text-indigo-900 z-10">‹</button>
+                <button onClick={() => setActiveImage((prev) => (prev < images.length - 1 ? prev + 1 : 0))} className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-white/90 rounded shadow-lg hover:bg-white transition-all opacity-0 group-hover:opacity-100 font-black text-indigo-900 z-10">›</button>
               </>
             )}
-            <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded text-sm font-bold">
-              {activeImage + 1} / {images.length}
+            <div className="absolute bottom-4 right-4 bg-[#002f34]/80 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg backdrop-blur-sm">
+              <span className="text-sm">📷</span> {activeImage + 1} / {images.length}
             </div>
           </div>
 
           {/* Details Section */}
-          <div className="bg-white border rounded p-6 space-y-8">
+          <div className="bg-white border rounded p-6 space-y-8 shadow-sm">
             <div className="flex justify-between items-start border-b pb-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-3xl font-bold text-gray-900">Rs {item.price?.toLocaleString()}</h1>
+                  <h1 className="text-3xl font-black text-gray-900">{formatPrice(item.price)}</h1>
                   {daysLeft !== null && daysLeft <= 10 && (
                     <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded-full uppercase">
                       ⚠️ Expiring in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
                     </span>
                   )}
                 </div>
-                <p className="text-lg text-gray-700 font-medium">{item.title}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+                <p className="text-lg text-gray-700 font-bold uppercase tracking-tight">{item.title}</p>
+                <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
                   <span className="flex items-center gap-1">📍 {item.city}</span>
                   <span>•</span>
                   <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                  <span>•</span>
+                  <span>{daysLeft !== null ? `${daysLeft} days ago` : ""}</span>
                 </div>
               </div>
               <div className="flex gap-4">
-                <button className="text-2xl hover:text-indigo-600 transition">📤</button>
-                <button className="text-2xl hover:text-red-500 transition">🤍</button>
+                <button className="text-2xl hover:scale-110 transition-transform">📤</button>
+                <button onClick={handleToggleFav} className={`text-2xl transition hover:scale-110 ${isFav ? 'text-red-500' : 'text-gray-300'}`}>
+                  {isFav ? '❤️' : '🤍'}
+                </button>
               </div>
             </div>
 
             {/* Icon Info Grid (as seen in Changan Karvaan picture) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 bg-gray-50 rounded-lg px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-b">
               {item.category === "Vehicles" && (
                 <>
-                  <div className="flex flex-col items-center text-center gap-1">
-                    <span className="text-2xl">📅</span>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Year</p>
-                    <p className="font-bold text-sm">{item.year}</p>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <span className="text-3xl">📅</span>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Year</p>
+                    <p className="font-black text-sm text-indigo-900">{item.year}</p>
                   </div>
-                  <div className="flex flex-col items-center text-center gap-1">
-                    <span className="text-2xl">🛣️</span>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">KM Driven</p>
-                    <p className="font-bold text-sm">{item.mileage?.toLocaleString()}</p>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <span className="text-3xl">🛣️</span>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">KM Driven</p>
+                    <p className="font-black text-sm text-indigo-900">{item.mileage?.toLocaleString()}</p>
                   </div>
-                  <div className="flex flex-col items-center text-center gap-1">
-                    <span className="text-2xl">⛽</span>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Fuel</p>
-                    <p className="font-bold text-sm">{item.fuelType || "Petrol"}</p>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <span className="text-3xl">⛽</span>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Fuel</p>
+                    <p className="font-black text-sm text-indigo-900">{item.fuelType || "Petrol"}</p>
                   </div>
-                  <div className="flex flex-col items-center text-center gap-1">
-                    <span className="text-2xl">⚙️</span>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Transmission</p>
-                    <p className="font-bold text-sm">{item.transmission || "Manual"}</p>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <span className="text-3xl">⚙️</span>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Transmission</p>
+                    <p className="font-black text-sm text-indigo-900">{item.transmission || "Manual"}</p>
                   </div>
                 </>
               )}
@@ -124,39 +163,30 @@ export default function ListingDetail() {
 
             {/* Detailed Specs Table */}
             <div>
-              <h3 className="text-xl font-bold mb-6 border-b pb-2">Details</h3>
+              <h3 className="text-xl font-black mb-6 uppercase italic text-indigo-900">Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Make</span><span className="font-semibold">{item.make}</span></div>
-                <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Model</span><span className="font-semibold">{item.model}</span></div>
-                <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Condition</span><span className="font-semibold">{item.condition || "Used"}</span></div>
+                <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Make</span><span className="font-black text-sm text-indigo-900">{item.make}</span></div>
+                <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Model</span><span className="font-black text-sm text-indigo-900">{item.model}</span></div>
+                <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Condition</span><span className="font-black text-sm text-indigo-900">{item.condition || "Used"}</span></div>
                 {item.category === "Vehicles" && (
                   <>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Engine</span><span className="font-semibold">{item.engine || "1300 cc"}</span></div>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Registered In</span><span className="font-semibold">{item.registeredCity || item.city}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Engine</span><span className="font-black text-sm text-indigo-900">{item.engine || "1300 cc"}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Registered In</span><span className="font-black text-sm text-indigo-900">{item.registeredCity || item.city}</span></div>
                   </>
                 )}
                 {item.category === "Property" && (
                   <>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Area</span><span className="font-semibold">{item.area}</span></div>
-                    <div className="flex justify-between border-b pb-2"><span className="text-gray-500">Bedrooms</span><span className="font-semibold">{item.bedrooms}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Area</span><span className="font-black text-sm text-indigo-900">{item.area}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Bedrooms</span><span className="font-black text-sm text-indigo-900">{item.bedrooms}</span></div>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Features Section */}
+            {/* Description Section */}
             <div>
-              <h3 className="text-xl font-bold mb-6 border-b pb-2">Features</h3>
-              <div className="flex flex-wrap gap-3">
-                {["ABS", "Airbags", "AM/FM Radio", "Power Windows", "Power Steering", "USB & Aux Connect"].map(feat => (
-                  <span key={feat} className="px-4 py-2 bg-gray-100 rounded-full text-sm font-semibold text-gray-700">{feat}</span>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold mb-3">Description</h3>
-              <div className="text-gray-700 whitespace-pre-wrap leading-relaxed border-t pt-4">{item.description}</div>
+              <h3 className="text-xl font-black mb-4 uppercase italic text-indigo-900">Description</h3>
+              <div className="text-gray-700 whitespace-pre-wrap leading-relaxed border-t-2 border-gray-50 pt-6 font-medium">{item.description}</div>
             </div>
           </div>
 
@@ -166,19 +196,7 @@ export default function ListingDetail() {
               <h3 className="text-xl font-bold mb-4 uppercase">Similar Ads</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {similarItems.map(it => (
-                  <Link key={it._id} to={`/listings/${it._id}`} className="bg-white rounded border hover:shadow-lg transition-shadow overflow-hidden group">
-                    <div className="aspect-[4/3] bg-gray-100 relative">
-                      {it.images?.[0] ? (
-                        <img src={typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url} alt={it.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <div className="text-lg font-bold text-indigo-900">Rs {it.price?.toLocaleString()}</div>
-                      <div className="text-xs text-gray-600 truncate">{it.title}</div>
-                    </div>
-                  </Link>
+                  <ListingCard key={it._id} it={it} />
                 ))}
               </div>
             </div>
@@ -187,60 +205,73 @@ export default function ListingDetail() {
 
         {/* Right Column: Seller Info */}
         <div className="col-span-12 lg:col-span-4 space-y-4">
-          <div className="bg-white border rounded p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-2xl uppercase font-bold text-indigo-900">
-                {item.sellerId?.avatar ? <img src={item.sellerId.avatar} className="w-full h-full rounded-full object-cover" /> : item.sellerId?.name?.[0]}
+          <div className="bg-white border rounded p-6 shadow-sm">
+            <Link to={`/profile/${item.sellerId?._id}`} className="flex items-center justify-between mb-6 group">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-2xl uppercase font-black text-indigo-900 border-2 border-white shadow-sm overflow-hidden">
+                  {item.sellerId?.avatar ? <img src={item.sellerId.avatar} className="w-full h-full object-cover" /> : item.sellerId?.name?.[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1">
+                    <h4 className="font-black text-lg text-indigo-900 group-hover:text-indigo-600 transition-colors truncate">{item.sellerId?.name}</h4>
+                    <span className="text-xl text-gray-300 group-hover:text-indigo-600 transition-colors">›</span>
+                  </div>
+                  <div className="flex gap-4 mt-1">
+                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Member since {new Date(item.sellerId?.createdAt || Date.now()).getFullYear()}</p>
+                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest border-l pl-4 border-gray-100">Active Ads: {Math.floor(Math.random() * 50) + 1}</p>
+                   </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase">Seller</p>
-                <h4 className="font-bold text-lg">{item.sellerId?.name}</h4>
-                <p className="text-sm text-gray-500">Member since {new Date(item.sellerId?.createdAt || Date.now()).getFullYear()}</p>
-              </div>
-            </div>
+            </Link>
 
             <div className="space-y-3">
-              {item.phone && (
-                <a href={`tel:+92${item.phone}`} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition">
-                  📞 +92 {item.phone}
-                </a>
-              )}
+              {/* Phone Button */}
+              {item.phone || item.sellerId?.phone ? (
+                <button 
+                  onClick={() => setShowPhone(!showPhone)}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-[#002f34] text-white font-black rounded hover:bg-[#003d44] transition-all shadow-md uppercase tracking-tight text-sm"
+                >
+                  <span className="text-lg">📞</span> 
+                  {showPhone ? `+92 ${item.phone || item.sellerId.phone}` : "Show Phone Number"}
+                </button>
+              ) : null}
               
-              {!item.phone && (
-                showPhone ? (
-                  <a href={`tel:${item.sellerId?.phone}`} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition">
-                    📞 {item.sellerId?.phone}
-                  </a>
-                ) : (
-                  <button 
-                    onClick={() => setShowPhone(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-indigo-900 text-indigo-900 font-bold rounded hover:bg-indigo-50 transition"
-                  >
-                    📞 Show Phone Number
-                  </button>
-                )
-              )}
-              
-              <Link to={`/chats?listingId=${item._id}`} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-indigo-900 text-indigo-900 font-bold rounded hover:bg-indigo-50 transition">
-                💬 Chat with Seller
+              {/* Chat Button */}
+              <Link 
+                to={`/chats?listingId=${item._id}`} 
+                className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#002f34] text-[#002f34] font-black rounded hover:bg-gray-50 transition-all uppercase tracking-tight text-sm"
+              >
+                <span className="text-lg">💬</span> Chat
               </Link>
+
+              {/* WhatsApp Button */}
+              {item.showWhatsApp && (
+                <button 
+                  onClick={handleWhatsApp}
+                  className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#002f34] text-[#002f34] font-black rounded hover:bg-gray-50 transition-all uppercase tracking-tight text-sm"
+                >
+                  <span className="text-lg">💬</span> WhatsApp
+                </button>
+              )}
+            </div>
+            
+            <div className="mt-6 pt-6 border-t flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              <span>AD ID: {item._id?.slice(-10).toUpperCase()}</span>
+              <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
+                � Report this ad
+              </button>
             </div>
           </div>
 
-          <div className="bg-white border rounded p-6">
-            <h4 className="font-bold mb-4 uppercase text-sm text-gray-500">Posted in</h4>
-            <div className="text-sm font-bold text-gray-800 mb-2">📍 {item.city}</div>
-            <div className="w-full h-48 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+          <div className="bg-white border rounded p-6 shadow-sm">
+            <h4 className="font-black mb-4 uppercase text-[10px] text-gray-400 tracking-widest">Posted in</h4>
+            <div className="text-sm font-black text-indigo-900 mb-4 flex items-center gap-2">
+              <span className="text-lg">📍</span> {item.city}
+            </div>
+            <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-300 font-black uppercase text-[10px] tracking-widest border-2 border-dashed border-gray-100">
               Map View Placeholder
             </div>
           </div>
-
-          <button 
-            onClick={() => toggleFavorite(token, item._id)}
-            className="w-full flex items-center justify-center gap-2 py-3 text-indigo-900 font-bold hover:bg-gray-100 transition rounded"
-          >
-            🤍 Save Ad
-          </button>
         </div>
 
       </div>

@@ -15,8 +15,35 @@ export const register = async (payload) => {
 }
 
 export const getMe = async (token) => {
-  const r = await fetch(`${API}/api/auth/me`, { headers: { ...authHeaders(token) } })
-  if (!r.ok) throw new Error("unauthorized")
+  const r = await fetch(`${API}/api/auth/me`, {
+    headers: { ...authHeaders(token) }
+  })
+  return r.json()
+}
+
+export const updateMe = async (data) => {
+  const token = localStorage.getItem("accessToken")
+  const r = await fetch(`${API}/api/auth/me`, {
+    method: "PUT",
+    headers: { 
+      "Content-Type": "application/json",
+      ...authHeaders(token) 
+    },
+    body: JSON.stringify(data)
+  })
+  return r.json()
+}
+
+export const toggleFavorite = async (listingId) => {
+  const token = localStorage.getItem("accessToken")
+  const r = await fetch(`${API}/api/auth/toggle-favorite`, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      ...authHeaders(token) 
+    },
+    body: JSON.stringify({ listingId })
+  })
   return r.json()
 }
 
@@ -26,7 +53,7 @@ export const fetchListings = async (params = {}) => {
   return r.json()
 }
 
-export const fetchListing = async (id) => {
+export const getListing = async (id) => {
   const r = await fetch(`${API}/api/listings/${id}`)
   return r.json()
 }
@@ -42,15 +69,5 @@ export const uploadImages = async (token, files) => {
   Array.from(files).forEach(f => fd.append("images", f))
   const r = await fetch(`${API}/api/listings/upload`, { method: "POST", headers: { ...authHeaders(token) }, body: fd })
   if (!r.ok) throw new Error("upload_failed")
-  return r.json()
-}
-
-export const toggleFavorite = async (token, listingId) => {
-  const r = await fetch(`${API}/api/favorites/${listingId}`, { method: "POST", headers: { ...authHeaders(token) } })
-  return r.json()
-}
-
-export const getFavorites = async (token) => {
-  const r = await fetch(`${API}/api/favorites`, { headers: { ...authHeaders(token) } })
   return r.json()
 }

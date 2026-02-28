@@ -1,35 +1,42 @@
 import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { fetchListings } from "../lib/api.js"
+import ListingCard from "../components/ListingCard.jsx"
 
 const CATEGORIES = [
-  { name: "Mobiles", icon: "📱" },
-  { name: "Vehicles", icon: "🚗" },
-  { name: "Property For Sale", icon: "🏠", slug: "Property" },
-  { name: "Property For Rent", icon: "🏢", slug: "Property" },
-  { name: "Electronics & Home Appliances", icon: "📺", slug: "Electronics" },
-  { name: "Bikes", icon: "🏍️" },
-  { name: "Business, Industrial & Agriculture", icon: "🚜", slug: "Business" },
-  { name: "Services", icon: "🛠️" },
-  { name: "Jobs", icon: "💼" },
-  { name: "Animals", icon: "🐾" },
-  { name: "Furniture & Home Decor", icon: "🛋️", slug: "Furniture" },
-  { name: "Fashion & Beauty", icon: "👗", slug: "Fashion" },
+  { name: "Mobiles", icon: "https://www.olx.com.pk/assets/mobiles.8bc37032159080bd1d9439ca2148ad4a.png" },
+  { name: "Vehicles", icon: "https://www.olx.com.pk/assets/vehicles.29eccf7119f1f0a05f884501a403079a.png" },
+  { name: "Property For Sale", icon: "https://www.olx.com.pk/assets/property-for-sale.e3a39529944f54e803878f30ee94589d.png", slug: "Property" },
+  { name: "Property For Rent", icon: "https://www.olx.com.pk/assets/property-for-rent.536340209930f9a9415668b31a3168d8.png", slug: "Property" },
+  { name: "Electronics & Home Appliances", icon: "https://www.olx.com.pk/assets/electronics-home-appliances.964259e88383e742e97b415e9820524c.png", slug: "Electronics" },
+  { name: "Bikes", icon: "https://www.olx.com.pk/assets/bikes.4273059434863f64024f28522e8ca92e.png" },
+  { name: "Business, Industrial & Agriculture", icon: "https://www.olx.com.pk/assets/business-industrial-agriculture.704a6ff4f90117094258f1f7375a0651.png", slug: "Business" },
+  { name: "Services", icon: "https://www.olx.com.pk/assets/services.0645f782c5a09b304c10a48545e8b417.png" },
+  { name: "Jobs", icon: "https://www.olx.com.pk/assets/jobs.79e5058721447e7b572e811f586b8f10.png" },
+  { name: "Animals", icon: "https://www.olx.com.pk/assets/animals.62d396440f8087796378f773b063806a.png" },
+  { name: "Furniture & Home Decor", icon: "https://www.olx.com.pk/assets/furniture-home-decor.31a89c3664c01f60447387e02554d393.png", slug: "Furniture" },
+  { name: "Fashion & Beauty", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png", slug: "Fashion" },
 ]
 
 export default function Home() {
   const [items, setItems] = useState([])
   const [location, setLocation] = useState("")
+  const [query, setQuery] = useState("")
   const navigate = useNavigate()
   
   useEffect(() => {
     fetchListings({ limit: 24 }).then(r => setItems(r.items || []))
   }, [])
 
-  const handleLocationSearch = (e) => {
-    if (e.key === 'Enter') {
-      navigate(`/listings?city=${encodeURIComponent(location)}`)
-    }
+  const handleSearch = () => {
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    if (location) params.set('city', location)
+    navigate(`/listings?${params.toString()}`)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch()
   }
 
   // Filter items by category for sections
@@ -37,6 +44,8 @@ export default function Home() {
   const cars = getCategoryItems("Vehicles")
   const property = getCategoryItems("Property")
   const mobiles = getCategoryItems("Mobiles")
+  const electronics = getCategoryItems("Electronics")
+  const bikes = getCategoryItems("Bikes")
 
   return (
     <div className="bg-[#f7f8f8] min-h-screen">
@@ -66,10 +75,10 @@ export default function Home() {
             <div className="relative w-full md:w-72">
               <input 
                 className="w-full border-2 border-indigo-900 rounded px-3 py-2 pl-10 focus:outline-none font-semibold text-sm h-12" 
-                placeholder="Search Location" 
+                placeholder="Search Location (e.g. Lahore)" 
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                onKeyDown={handleLocationSearch}
+                onKeyDown={handleKeyDown}
               />
               <span className="absolute left-3 top-3.5">📍</span>
             </div>
@@ -78,11 +87,13 @@ export default function Home() {
               <input 
                 className="flex-1 px-4 py-2 focus:outline-none text-sm" 
                 placeholder="Find Cars, Mobile Phones and more..." 
-                onKeyDown={(e)=>{if(e.key==='Enter'){navigate(`/listings?q=${encodeURIComponent(e.currentTarget.value)}`)}}}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
               <button 
                 className="bg-indigo-900 text-white px-6 py-2 hover:bg-indigo-800 transition"
-                onClick={()=>navigate(`/listings`)}
+                onClick={handleSearch}
               >
                 🔍
               </button>
@@ -95,7 +106,7 @@ export default function Home() {
       <div className="bg-white border-b shadow-sm overflow-x-auto scrollbar-hide">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-8 py-3 whitespace-nowrap text-sm font-bold uppercase">
           <button className="flex items-center gap-2 text-[12px]">ALL CATEGORIES ⌄</button>
-          {CATEGORIES.slice(0, 8).map(cat => (
+          {CATEGORIES.slice(0, 10).map(cat => (
             <Link key={cat.name} to={`/listings?category=${cat.slug || cat.name}`} className="hover:text-indigo-600 transition text-[12px]">
               {cat.name}
             </Link>
@@ -103,10 +114,36 @@ export default function Home() {
         </div>
       </div>
 
+      {/* All Categories Grid */}
+      <div className="max-w-7xl mx-auto px-4 mt-8">
+        <h2 className="text-xl font-black text-indigo-900 uppercase italic mb-6">All Categories</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4">
+          {CATEGORIES.map(cat => (
+            <Link 
+              key={cat.name} 
+              to={`/listings?category=${cat.slug || cat.name}`} 
+              className="flex flex-col items-center text-center group"
+            >
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-2 shadow-sm border border-gray-100 group-hover:border-indigo-200 transition p-2">
+                <img src={cat.icon} alt={cat.name} className="w-12 h-12 object-contain group-hover:scale-110 transition" />
+              </div>
+              <span className="text-[10px] font-black text-gray-700 uppercase leading-tight group-hover:text-indigo-900">{cat.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Hero Banner */}
-      <div className="max-w-7xl mx-auto px-4 mt-6">
-        <div className="w-full h-48 md:h-64 rounded overflow-hidden shadow-sm">
-          <img src="https://images.olx.com.pk/thumbnails/435111153-800x600.webp" className="w-full h-full object-cover" alt="Banner" />
+      <div className="max-w-7xl mx-auto px-4 mt-10">
+        <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden shadow-md border">
+          <img 
+            src="https://images.olx.com.pk/thumbnails/435111153-800x600.webp" 
+            className="w-full h-full object-cover" 
+            alt="Banner" 
+            onError={(e) => {
+              e.target.src = "https://www.olx.com.pk/assets/olx_app_banner_noinline.32f4a478c93393952d7962453f090d81.webp"
+            }}
+          />
         </div>
       </div>
 
@@ -116,8 +153,8 @@ export default function Home() {
         {/* Cars Section */}
         {cars.length > 0 && (
           <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold uppercase text-gray-800">Cars</h2>
+            <div className="flex justify-between items-center mb-4 border-b-2 border-indigo-900 pb-1">
+              <h2 className="text-xl font-black uppercase text-indigo-900">Cars</h2>
               <Link to="/listings?category=Vehicles" className="text-indigo-600 font-bold text-sm hover:underline">View more</Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -129,8 +166,8 @@ export default function Home() {
         {/* Mobile Phones Section */}
         {mobiles.length > 0 && (
           <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold uppercase text-gray-800">Mobile Phones</h2>
+            <div className="flex justify-between items-center mb-4 border-b-2 border-indigo-900 pb-1">
+              <h2 className="text-xl font-black uppercase text-indigo-900">Mobile Phones</h2>
               <Link to="/listings?category=Mobiles" className="text-indigo-600 font-bold text-sm hover:underline">View more</Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -142,8 +179,8 @@ export default function Home() {
         {/* Property Section */}
         {property.length > 0 && (
           <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold uppercase text-gray-800">Houses & Plots</h2>
+            <div className="flex justify-between items-center mb-4 border-b-2 border-indigo-900 pb-1">
+              <h2 className="text-xl font-black uppercase text-indigo-900">Houses & Plots</h2>
               <Link to="/listings?category=Property" className="text-indigo-600 font-bold text-sm hover:underline">View more</Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -152,11 +189,24 @@ export default function Home() {
           </section>
         )}
 
+        {/* Bikes Section */}
+        {bikes.length > 0 && (
+          <section>
+            <div className="flex justify-between items-center mb-4 border-b-2 border-indigo-900 pb-1">
+              <h2 className="text-xl font-black uppercase text-indigo-900">Bikes</h2>
+              <Link to="/listings?category=Bikes" className="text-indigo-600 font-bold text-sm hover:underline">View more</Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {bikes.map(it => <ListingCard key={it._id} it={it} />)}
+            </div>
+          </section>
+        )}
+
         {/* Recommendations */}
         <section>
-          <h2 className="text-xl font-bold uppercase text-gray-800 mb-4">Fresh Recommendations</h2>
+          <h2 className="text-xl font-black uppercase text-indigo-900 mb-4 border-b-2 border-indigo-900 pb-1">Fresh Recommendations</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {items.slice(0, 12).map(it => <ListingCard key={it._id} it={it} />)}
+            {items.slice(0, 16).map(it => <ListingCard key={it._id} it={it} />)}
           </div>
         </section>
       </div>
@@ -175,34 +225,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  )
-}
-
-function ListingCard({ it }) {
-  return (
-    <Link to={`/listings/${it._id}`} className="bg-white rounded border-2 border-gray-100 hover:border-indigo-200 transition shadow-sm group overflow-hidden">
-      <div className="aspect-[4/3] relative bg-gray-50">
-        {it.images?.[0] ? (
-          <img 
-            src={typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url} 
-            alt={it.title} 
-            className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
-        )}
-        <button className="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full shadow hover:text-red-500 transition">🤍</button>
-      </div>
-      <div className="p-3">
-        <div className="flex justify-between items-start mb-1">
-          <div className="text-lg font-bold text-gray-900">Rs {it.price?.toLocaleString()}</div>
-        </div>
-        <div className="text-sm text-gray-600 line-clamp-1 mb-3">{it.title}</div>
-        <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-          <span>{it.city}</span>
-          <span>{new Date(it.createdAt).toLocaleDateString()}</span>
-        </div>
-      </div>
-    </Link>
   )
 }

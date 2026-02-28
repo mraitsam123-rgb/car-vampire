@@ -47,6 +47,21 @@ router.get("/me", authMiddleware, async (req, res) => {
   res.json({ user: req.user })
 })
 
+router.put("/me", authMiddleware, async (req, res) => {
+  const { name, phone, city, address, avatar } = req.body
+  const user = await User.findById(req.user._id)
+  if (!user) return res.status(404).json({ error: "not_found" })
+  
+  if (name) user.name = name
+  if (phone) user.phone = phone
+  if (city) user.city = city
+  if (address) user.address = address
+  if (avatar) user.avatar = avatar
+  
+  await user.save()
+  res.json({ user })
+})
+
 router.post("/verify", async (req, res) => {
   const { email, token } = req.body || {}
   const user = await User.findOne({ email, verifyToken: token, verifyExpires: { $gt: new Date() } })
@@ -62,6 +77,22 @@ router.post("/reveal-phone", authMiddleware, async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $inc: { phoneRevealCount: 1 } })
   const user = await User.findById(req.user._id).select("-passwordHash")
   res.json({ user })
+})
+
+router.post("/toggle-favorite", authMiddleware, async (req, res) => {
+  const { listingId } = req.body
+  const user = await User.findById(req.user._id)
+  if (!user) return res.status(404).json({ error: "user_not_found" })
+  
+  const index = user.favorites.indexOf(listingId)
+  if (index === -1) {
+    user.favorites.push(listingId)
+  } else {
+    user.favorites.splice(index, 1)
+  }
+  
+  await user.save()
+  res.json({ favorites: user.favorites })
 })
 
 export default router
