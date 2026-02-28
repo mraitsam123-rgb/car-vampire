@@ -19,7 +19,9 @@ router.post("/start", async (req, res) => {
 router.get("/", async (req, res) => {
   const chats = await Chat.find({ $or: [{ buyerId: req.user._id }, { sellerId: req.user._id }] })
     .sort({ updatedAt: -1 })
-    .populate("listingId", "title price images")
+    .populate("listingId", "title price images category")
+    .populate("buyerId", "name avatar")
+    .populate("sellerId", "name avatar")
   res.json(chats)
 })
 

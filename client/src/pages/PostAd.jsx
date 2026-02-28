@@ -24,7 +24,8 @@ export default function PostAd() {
     title: "", price: "", city: "", description: "",
     make: "", model: "", year: "", mileage: "", 
     propertyType: "", area: "", bedrooms: "", phone: "",
-    showWhatsApp: false
+    showWhatsApp: false,
+    isWhatsApp: false
   })
   const [images, setImages] = useState([])
   const [uploading, setUploading] = useState(false)
@@ -60,7 +61,8 @@ export default function PostAd() {
         year: form.year ? Number(form.year) : undefined,
         mileage: form.mileage ? Number(form.mileage) : undefined,
         bedrooms: form.bedrooms ? Number(form.bedrooms) : undefined,
-        images 
+        images,
+        isWhatsApp: form.isWhatsApp
       }
       await createListing(token, payload)
       toast.success("Ad posted successfully!", { id: loadingToast })
@@ -215,15 +217,27 @@ export default function PostAd() {
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-xl border-2 border-indigo-100">
-                <span className="text-sm font-black text-indigo-900 uppercase tracking-tight">Show my phone number in ads</span>
-                <button 
-                  type="button"
-                  onClick={() => setForm({...form, showWhatsApp: !form.showWhatsApp})}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${form.showWhatsApp ? 'bg-indigo-900' : 'bg-gray-300'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.showWhatsApp ? 'left-7' : 'left-1'}`}></div>
-                </button>
+              <div className="flex flex-col gap-4 p-4 bg-indigo-50/50 rounded-xl border-2 border-indigo-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-black text-indigo-900 uppercase tracking-tight">Show my phone number in ads</span>
+                  <button 
+                    type="button"
+                    onClick={() => setForm({...form, showWhatsApp: !form.showWhatsApp})}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${form.showWhatsApp ? 'bg-indigo-900' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.showWhatsApp ? 'left-7' : 'left-1'}`}></div>
+                  </button>
+                </div>
+                <div className="flex items-center justify-between border-t border-indigo-100 pt-4">
+                  <span className="text-sm font-black text-indigo-900 uppercase tracking-tight italic">Is this a WhatsApp number?</span>
+                  <button 
+                    type="button"
+                    onClick={() => setForm({...form, isWhatsApp: !form.isWhatsApp})}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${form.isWhatsApp ? 'bg-[#25D366]' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.isWhatsApp ? 'left-7' : 'left-1'}`}></div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

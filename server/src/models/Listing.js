@@ -36,6 +36,7 @@ const listingSchema = new mongoose.Schema(
     isFurnished: { type: Boolean },
     phone: { type: String },
     showWhatsApp: { type: Boolean, default: false },
+    isWhatsApp: { type: Boolean, default: false },
     images: [
       new mongoose.Schema(
         {

@@ -40,6 +40,22 @@ export default function Dashboard() {
     fetchDashboardData()
   }, [me?.id, me?._id, me?.favorites?.length])
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this ad?")) return
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+      })
+      if (res.ok) {
+        setMyAds(myAds.filter(it => it._id !== id))
+        toast.success("Ad deleted successfully")
+      }
+    } catch (err) {
+      toast.error("Failed to delete ad")
+    }
+  }
+
   if (loading) return (
     <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-900"></div>
@@ -113,7 +129,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
                         <Link to={`/listings/${it._id}`} className="px-4 py-1.5 bg-gray-100 text-indigo-900 text-xs font-bold rounded-full hover:bg-indigo-100 transition text-center">View</Link>
-                        <button className="px-4 py-1.5 text-red-600 text-xs font-bold rounded-full hover:bg-red-50 transition border border-red-100">Delete</button>
+                        <button onClick={() => handleDelete(it._id)} className="px-4 py-1.5 text-red-600 text-xs font-bold rounded-full hover:bg-red-50 transition border border-red-100">Delete</button>
                       </div>
                     </div>
                   )

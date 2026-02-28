@@ -33,7 +33,8 @@ const createSchema = z.object({
     bathrooms: z.number().optional(),
     isFurnished: z.boolean().optional(),
     phone: z.string().optional(),
-    showWhatsApp: z.boolean().optional()
+    showWhatsApp: z.boolean().optional(),
+    isWhatsApp: z.boolean().optional()
   })
 
 router.post("/", authMiddleware, async (req, res) => {

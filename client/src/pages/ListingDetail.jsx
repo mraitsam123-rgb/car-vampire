@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { getListing, toggleFavorite, fetchListings } from "../lib/api.js"
 import { useUser } from "../context/UserContext.jsx"
 import { toast } from "react-hot-toast"
@@ -7,6 +7,7 @@ import ListingCard from "../components/ListingCard.jsx"
 
 export default function ListingDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { me, setMe } = useUser()
   const [item, setItem] = useState(null)
   const [similarItems, setSimilarItems] = useState([])
@@ -49,6 +50,26 @@ export default function ListingDetail() {
     if (!phone) return toast.error("Phone number not available")
     const msg = encodeURIComponent(`Hi, I'm interested in your ad: ${item.title}\n${window.location.href}`)
     window.open(`https://wa.me/92${phone.replace(/^0/, '')}?text=${msg}`, '_blank')
+  }
+
+  const handleStartChat = async () => {
+    if (!me) return toast.error("Please login to chat")
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/chats/start`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}` 
+        },
+        body: JSON.stringify({ listingId: item._id, sellerId: item.sellerId?._id })
+      })
+      const chat = await res.json()
+      if (chat._id) {
+        navigate(`/chats?listingId=${item._id}`)
+      }
+    } catch (err) {
+      toast.error("Failed to start chat")
+    }
   }
 
   const formatPrice = (price) => {
@@ -237,18 +258,18 @@ export default function ListingDetail() {
               ) : null}
               
               {/* Chat Button */}
-              <Link 
-                to={`/chats?listingId=${item._id}`} 
+              <button 
+                onClick={handleStartChat}
                 className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#002f34] text-[#002f34] font-black rounded hover:bg-gray-50 transition-all uppercase tracking-tight text-sm"
               >
                 <span className="text-lg">💬</span> Chat
-              </Link>
+              </button>
 
               {/* WhatsApp Button */}
-              {item.showWhatsApp && (
+              {item.isWhatsApp && (
                 <button 
                   onClick={handleWhatsApp}
-                  className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#002f34] text-[#002f34] font-black rounded hover:bg-gray-50 transition-all uppercase tracking-tight text-sm"
+                  className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#25D366] text-[#25D366] font-black rounded hover:bg-green-50 transition-all uppercase tracking-tight text-sm"
                 >
                   <span className="text-lg">💬</span> WhatsApp
                 </button>

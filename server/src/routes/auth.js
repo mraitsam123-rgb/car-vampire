@@ -44,7 +44,8 @@ router.post("/login", async (req, res) => {
 })
 
 router.get("/me", authMiddleware, async (req, res) => {
-  res.json({ user: req.user })
+  const user = req.user
+  res.json({ user: { id: user._id, name: user.name, email: user.email, phone: user.phone, city: user.city, address: user.address, avatar: user.avatar, favorites: user.favorites } })
 })
 
 router.put("/me", authMiddleware, async (req, res) => {
@@ -59,7 +60,7 @@ router.put("/me", authMiddleware, async (req, res) => {
   if (avatar) user.avatar = avatar
   
   await user.save()
-  res.json({ user })
+  res.json({ user: { id: user._id, name: user.name, email: user.email, phone: user.phone, city: user.city, address: user.address, avatar: user.avatar, favorites: user.favorites } })
 })
 
 router.post("/verify", async (req, res) => {
@@ -84,11 +85,11 @@ router.post("/toggle-favorite", authMiddleware, async (req, res) => {
   const user = await User.findById(req.user._id)
   if (!user) return res.status(404).json({ error: "user_not_found" })
   
-  const index = user.favorites.indexOf(listingId)
-  if (index === -1) {
+  const exists = user.favorites.some(id => id.toString() === listingId)
+  if (!exists) {
     user.favorites.push(listingId)
   } else {
-    user.favorites.splice(index, 1)
+    user.favorites = user.favorites.filter(id => id.toString() !== listingId)
   }
   
   await user.save()

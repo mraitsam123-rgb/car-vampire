@@ -6,16 +6,15 @@ import ListingCard from "../components/ListingCard.jsx"
 const CATEGORIES = [
   { name: "Mobiles", icon: "https://www.olx.com.pk/assets/mobiles.8bc37032159080bd1d9439ca2148ad4a.png" },
   { name: "Vehicles", icon: "https://www.olx.com.pk/assets/vehicles.29eccf7119f1f0a05f884501a403079a.png" },
-  { name: "Property For Sale", icon: "https://www.olx.com.pk/assets/property-for-sale.e3a39529944f54e803878f30ee94589d.png", slug: "Property" },
-  { name: "Property For Rent", icon: "https://www.olx.com.pk/assets/property-for-rent.536340209930f9a9415668b31a3168d8.png", slug: "Property" },
-  { name: "Electronics & Home Appliances", icon: "https://www.olx.com.pk/assets/electronics-home-appliances.964259e88383e742e97b415e9820524c.png", slug: "Electronics" },
+  { name: "Property", icon: "https://www.olx.com.pk/assets/property-for-sale.e3a39529944f54e803878f30ee94589d.png" },
+  { name: "Electronics", icon: "https://www.olx.com.pk/assets/electronics-home-appliances.964259e88383e742e97b415e9820524c.png" },
   { name: "Bikes", icon: "https://www.olx.com.pk/assets/bikes.4273059434863f64024f28522e8ca92e.png" },
-  { name: "Business, Industrial & Agriculture", icon: "https://www.olx.com.pk/assets/business-industrial-agriculture.704a6ff4f90117094258f1f7375a0651.png", slug: "Business" },
+  { name: "Business", icon: "https://www.olx.com.pk/assets/business-industrial-agriculture.704a6ff4f90117094258f1f7375a0651.png" },
   { name: "Services", icon: "https://www.olx.com.pk/assets/services.0645f782c5a09b304c10a48545e8b417.png" },
   { name: "Jobs", icon: "https://www.olx.com.pk/assets/jobs.79e5058721447e7b572e811f586b8f10.png" },
   { name: "Animals", icon: "https://www.olx.com.pk/assets/animals.62d396440f8087796378f773b063806a.png" },
-  { name: "Furniture & Home Decor", icon: "https://www.olx.com.pk/assets/furniture-home-decor.31a89c3664c01f60447387e02554d393.png", slug: "Furniture" },
-  { name: "Fashion & Beauty", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png", slug: "Fashion" },
+  { name: "Furniture", icon: "https://www.olx.com.pk/assets/furniture-home-decor.31a89c3664c01f60447387e02554d393.png" },
+  { name: "Fashion", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png" },
 ]
 
 export default function Home() {
@@ -135,14 +134,17 @@ export default function Home() {
 
       {/* Hero Banner */}
       <div className="max-w-7xl mx-auto px-4 mt-10">
-        <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden shadow-md border">
+        <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden shadow-md border bg-indigo-900 flex items-center justify-between px-10 md:px-20 text-white relative">
+          <div className="z-10 space-y-4">
+            <h2 className="text-3xl md:text-5xl font-black uppercase italic italic">Sell anything,<br/>Buy everything</h2>
+            <p className="text-sm md:text-lg font-bold text-indigo-200 uppercase tracking-widest">Pakistan's #1 Marketplace for Vehicles & Property</p>
+            <Link to="/post-ad" className="inline-block bg-white text-indigo-900 px-8 py-3 rounded-full font-black uppercase tracking-widest hover:bg-indigo-50 transition shadow-xl">Start Selling Now</Link>
+          </div>
+          <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-indigo-800/50 to-transparent"></div>
           <img 
-            src="https://images.olx.com.pk/thumbnails/435111153-800x600.webp" 
-            className="w-full h-full object-cover" 
-            alt="Banner" 
-            onError={(e) => {
-              e.target.src = "https://www.olx.com.pk/assets/olx_app_banner_noinline.32f4a478c93393952d7962453f090d81.webp"
-            }}
+            src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
+            className="absolute right-0 top-0 h-full w-1/3 object-cover opacity-50 md:opacity-100 mix-blend-overlay" 
+            alt="Marketplace" 
           />
         </div>
       </div>
@@ -212,15 +214,15 @@ export default function Home() {
       </div>
 
       {/* Footer App Banner */}
-      <div className="bg-[#3a77ff1a] py-10 mt-10">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-10">
-          <div className="flex-1">
-            <h3 className="text-3xl font-extrabold text-indigo-900 mb-2 uppercase italic">Try the OLX app</h3>
-            <p className="text-gray-600 text-lg">Buy, sell and find anything using the app on your mobile.</p>
+      <div className="bg-indigo-900 py-16 mt-20">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16">
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-4xl md:text-6xl font-black text-white mb-6 uppercase italic italic tracking-tighter">Get the OLX App</h3>
+            <p className="text-indigo-200 text-lg md:text-xl font-bold uppercase tracking-widest">Buy, sell and find anything using the app on your mobile.</p>
           </div>
-          <div className="flex gap-4">
-            <img src="https://www.olx.com.pk/assets/iconAppStore_noinline.a739345fb4c14b6e40397a0505e179c0.svg" className="h-10 cursor-pointer" alt="App Store" />
-            <img src="https://www.olx.com.pk/assets/iconGooglePlayStore_noinline.98928337859396cd039673f95b0cf5d8.svg" className="h-10 cursor-pointer" alt="Google Play" />
+          <div className="flex flex-col sm:flex-row gap-6">
+            <img src="https://www.olx.com.pk/assets/iconAppStore_noinline.a739345fb4c14b6e40397a0505e179c0.svg" className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" alt="App Store" />
+            <img src="https://www.olx.com.pk/assets/iconGooglePlayStore_noinline.98928337859396cd039673f95b0cf5d8.svg" className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" alt="Google Play" />
           </div>
         </div>
       </div>
