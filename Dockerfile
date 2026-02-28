@@ -1,9 +1,11 @@
 # Build Stage for Frontend
 FROM node:20-alpine AS client-builder
+WORKDIR /app
+# Copy everything to have the correct context
+COPY . .
+# Build the client
 WORKDIR /app/client
-COPY client/package*.json ./
 RUN npm install
-COPY client/ ./
 RUN npm run build
 
 # Final Stage

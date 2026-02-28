@@ -30,14 +30,13 @@ Marketplace for buying/selling cars with listings, favorites, chat, and image up
 
 ## Push to GitHub
 
-```bash
-git init
-git branch -M main
-git add -A
-git commit -m "initial import"
-git remote add origin https://github.com/mraitsam123-rgb/car-vampire.git
-git push -u origin main
+Ensure you are in the **project root directory** (not inside `client` or `server`) before running:
+
+```powershell
+.\scripts\push.ps1
 ```
+
+Or manually:
 
 > Ensure you have a GitHub credential helper configured or use a Personal Access Token when prompted.
 *** End Patch***} ?>"
