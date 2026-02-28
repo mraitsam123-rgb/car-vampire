@@ -39,7 +39,7 @@ export default function ListingDetail() {
           <div className="mt-3 flex gap-2">
             <Link to="/chats" className="px-3 py-2 bg-indigo-600 rounded text-white">Chat</Link>
             {token ? (
-              showPhone ? <a href={`tel:${item?.sellerId?.phone || ""}`} className="px-3 py-2 border rounded">{item?.sellerId?.phone || "Call"}</a> : <button onClick={async ()=>{await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/reveal-phone`,{method:"POST",headers:{Authorization:`Bearer ${token}`}});setShowPhone(true)}} className="px-3 py-2 border rounded">Reveal number</button>
+              showPhone ? <a href={`tel:${item?.sellerId?.phone || ""}`} className="px-3 py-2 border rounded">{item?.sellerId?.phone || "Call"}</a> : <button onClick={async ()=>{await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:7860"}/api/auth/reveal-phone`,{method:"POST",headers:{Authorization:`Bearer ${token}`}});setShowPhone(true)}} className="px-3 py-2 border rounded">Reveal number</button>
             ) : (
               <Link to="/login" className="px-3 py-2 border rounded">Login to view</Link>
             )}

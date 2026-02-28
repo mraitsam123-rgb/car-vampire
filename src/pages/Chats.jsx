@@ -7,7 +7,7 @@ export default function Chats() {
   const [messages, setMessages] = useState([])
   const socketRef = useRef(null)
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:5000", { auth: { token } })
+    const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, { auth: { token } })
     socketRef.current = socket
     if (chatId) socket.emit("join", chatId)
     socket.on("message", (msg) => setMessages((m) => [...m, msg]))
