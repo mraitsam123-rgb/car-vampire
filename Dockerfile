@@ -11,13 +11,13 @@ FROM node:20-alpine
 WORKDIR /app
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
-# Copy server files maintaining structure
+# Copy server files
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
 COPY server/ ./server/
 
-# Copy frontend build maintaining structure
-COPY --from=client-builder /app/client/dist ./client/dist
+# Copy frontend build directly into the server folder for easier access
+COPY --from=client-builder /app/client/dist ./server/client/dist
 
 ENV NODE_ENV=production
 EXPOSE 7860
