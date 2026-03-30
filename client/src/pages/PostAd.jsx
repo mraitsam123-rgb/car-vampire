@@ -5,17 +5,17 @@ import { toast } from "react-hot-toast"
 import { useUser } from "../context/UserContext.jsx"
 
 const CATEGORIES = [
-  { name: "Mobiles", icon: "https://www.olx.com.pk/assets/mobiles.8bc37032159080bd1d9439ca2148ad4a.png" },
-  { name: "Vehicles", icon: "https://www.olx.com.pk/assets/vehicles.29eccf7119f1f0a05f884501a403079a.png" },
-  { name: "Property", icon: "https://www.olx.com.pk/assets/property-for-sale.e3a39529944f54e803878f30ee94589d.png" },
-  { name: "Electronics", icon: "https://www.olx.com.pk/assets/electronics-home-appliances.964259e88383e742e97b415e9820524c.png" },
-  { name: "Bikes", icon: "https://www.olx.com.pk/assets/bikes.4273059434863f64024f28522e8ca92e.png" },
-  { name: "Business", icon: "https://www.olx.com.pk/assets/business-industrial-agriculture.704a6ff4f90117094258f1f7375a0651.png" },
-  { name: "Services", icon: "https://www.olx.com.pk/assets/services.0645f782c5a09b304c10a48545e8b417.png" },
-  { name: "Jobs", icon: "https://www.olx.com.pk/assets/jobs.79e5058721447e7b572e811f586b8f10.png" },
-  { name: "Animals", icon: "https://www.olx.com.pk/assets/animals.62d396440f8087796378f773b063806a.png" },
-  { name: "Furniture", icon: "https://www.olx.com.pk/assets/furniture-home-decor.31a89c3664c01f60447387e02554d393.png" },
-  { name: "Fashion", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png" },
+  { name: "Mobiles", icon: "/logos/mobile logo.png" },
+  { name: "Vehicles", icon: "/logos/car logo.png" },
+  { name: "Property", icon: "/logos/property.png" },
+  { name: "Electronics", icon: "/logos/electronics logo.png" },
+  { name: "Bikes", icon: "/logos/bike logo.png" },
+  { name: "Business", icon: "/logos/bussiness logo.png" },
+  { name: "Services", icon: "/logos/services logo.png" },
+  { name: "Jobs", icon: "/logos/jobs logo.png" },
+  { name: "Animals", icon: "/logos/animals logo.png" },
+  { name: "Furniture", icon: "/logos/furniture logo.png" },
+  { name: "Fashion", icon: "/logos/fashion logo.png" },
 ]
 
 const CAR_MAKES = {
