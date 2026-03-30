@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { io } from "socket.io-client"
-import { useEffect, useState, useRef } from "react"
 import { useUser } from "../context/UserContext.jsx"
 import { getChats, getMessages } from "../lib/api.js"
 import { Link, useSearchParams } from "react-router-dom"
-import { io } from "socket.io-client"
 
 const API = import.meta.env.VITE_API_URL || ""
 
