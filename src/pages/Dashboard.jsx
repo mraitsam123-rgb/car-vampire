@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { fetchListings, getMe } from "../lib/api.js"
+import { fetchListings, getListing, deleteListing } from "../lib/api.js"
 import { Link } from "react-router-dom"
 import { useUser } from "../context/UserContext.jsx"
 import ListingCard from "../components/ListingCard.jsx"
+import { toast } from "react-hot-toast"
 
 export default function Dashboard() {
   const { me, logout } = useUser()
@@ -11,9 +12,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!me) return
+    if (!me?.id && !me?._id) return
     
-    const fetchDashboardData = async () => {
+    const loadData = async () => {
       try {
         setLoading(true)
         // Fetch my ads
@@ -21,36 +22,32 @@ export default function Dashboard() {
         setMyAds(myAdsRes?.items || [])
 
         // Fetch favorite listings if any
-        if (me?.favorites && Array.isArray(me.favorites) && me.favorites.length > 0) {
-          const favPromises = me.favorites.map(id => 
-            fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}`).then(r => r.ok ? r.json() : null)
-          )
+        if (me?.favorites && Array.isArray(me?.favorites) && me?.favorites?.length > 0) {
+          const favPromises = me.favorites.map(id => {
+            const actualId = typeof id === 'object' ? (id._id || id.id) : id;
+            return getListing(actualId).catch(() => null)
+          })
           const favResults = await Promise.all(favPromises)
           setFavorites(favResults.filter(f => f && !f.error))
         } else {
           setFavorites([])
         }
       } catch (err) {
-        console.error(err)
+        console.error("Dashboard load error", err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchDashboardData()
+    loadData()
   }, [me?.id, me?._id, me?.favorites?.length])
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this ad?")) return
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-      })
-      if (res.ok) {
-        setMyAds(myAds.filter(it => it._id !== id))
-        toast.success("Ad deleted successfully")
-      }
+      await deleteListing(id)
+      setMyAds(myAds.filter(it => it._id !== id))
+      toast.success("Ad deleted successfully")
     } catch (err) {
       toast.error("Failed to delete ad")
     }

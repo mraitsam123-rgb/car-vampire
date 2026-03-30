@@ -44,11 +44,11 @@ export default function PostAd() {
 
   const submit = async (e) => {
     e.preventDefault()
-    if (images.length === 0) {
-      toast.error("Please upload at least one photo")
+    if (!images || images?.length === 0) {
+      toast.error("Please upload at least one image")
       return
     }
-    if (!form.phone || form.phone.length < 10) {
+    if (!form?.phone || form?.phone?.length < 10) {
       toast.error("Please enter a valid phone number")
       return
     }
@@ -126,14 +126,14 @@ export default function PostAd() {
                 <span className="text-2xl text-indigo-400 group-hover:scale-125 transition-transform">+</span>
                 <input type="file" multiple hidden onChange={handleUpload} disabled={uploading} />
               </label>
-              {images.map(img => (
-                <div key={img.fileId} className="aspect-square border-2 border-gray-100 rounded-xl overflow-hidden relative group">
-                  <img src={img.url} className="w-full h-full object-cover" />
-                  <button type="button" onClick={()=>setImages(images.filter(i=>i.fileId!==img.fileId))} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+              {images?.map(img => (
+                <div key={img?.fileId} className="aspect-square border-2 border-gray-100 rounded-xl overflow-hidden relative group">
+                  <img src={img?.url} className="w-full h-full object-cover" />
+                  <button type="button" onClick={()=>setImages(images.filter(i=>i?.fileId!==img?.fileId))} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                 </div>
               ))}
-              {Array.from({ length: Math.max(0, 14 - images.length - 1) }).map((_, i) => (
-                <div key={i} className="aspect-square border-2 border-gray-50 rounded-xl flex items-center justify-center text-gray-200 bg-gray-50/50">
+              {Array.from({ length: Math.max(0, 14 - (images?.length || 0) - 1) }).map((_, i) => (
+                <div key={i} className="aspect-square border-2 border-gray-100 rounded-xl flex items-center justify-center text-gray-200 bg-gray-50/50">
                   📷
                 </div>
               ))}

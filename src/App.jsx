@@ -63,9 +63,9 @@ function AppContent() {
                 <Link to="/chats" className="text-2xl hover:text-indigo-600 transition">💬</Link>
                 <button className="text-2xl hover:text-indigo-600 transition relative">
                   🔔
-                  {notifications.length > 0 && (
+                  {notifications?.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                      {notifications.length}
+                      {notifications?.length}
                     </span>
                   )}
                 </button>

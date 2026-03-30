@@ -95,3 +95,59 @@ export const uploadImages = async (token, files) => {
     body: fd 
   })
 }
+
+export const getReviews = async (id) => {
+  try {
+    return await request(`${API}/api/listings/${id}/reviews`)
+  } catch (err) {
+    return []
+  }
+}
+
+export const addReview = async (id, payload) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/listings/${id}/reviews`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json", ...authHeaders(token) }, 
+    body: JSON.stringify(payload) 
+  })
+}
+
+export const getChats = async () => {
+  const token = localStorage.getItem("accessToken")
+  try {
+    return await request(`${API}/api/chats`, {
+      headers: { ...authHeaders(token) }
+    })
+  } catch (err) {
+    return []
+  }
+}
+
+export const getMessages = async (chatId) => {
+  const token = localStorage.getItem("accessToken")
+  try {
+    return await request(`${API}/api/chats/${chatId}/messages`, {
+      headers: { ...authHeaders(token) }
+    })
+  } catch (err) {
+    return []
+  }
+}
+
+export const startChat = async (payload) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/chats/start`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json", ...authHeaders(token) }, 
+    body: JSON.stringify(payload) 
+  })
+}
+
+export const deleteListing = async (id) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/listings/${id}`, { 
+    method: "DELETE", 
+    headers: { ...authHeaders(token) } 
+  })
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
-import { getListing, toggleFavorite, fetchListings } from "../lib/api.js"
+import { getListing, toggleFavorite, fetchListings, getReviews, addReview, startChat } from "../lib/api.js"
 import { useUser } from "../context/UserContext.jsx"
 import { toast } from "react-hot-toast"
 import ListingCard from "../components/ListingCard.jsx"
@@ -44,26 +44,14 @@ export default function ListingDetail() {
     })
 
     // Fetch reviews
-    fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}/reviews`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setReviews(Array.isArray(data) ? data : []))
-      .catch(() => setReviews([]))
+    getReviews(id).then(setReviews)
   }, [id])
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault()
     if (!me) return toast.error("Please login to leave a review")
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}/reviews`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}` 
-        },
-        body: JSON.stringify(newReview)
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      const data = await addReview(id, newReview)
       setReviews([data, ...reviews])
       setNewReview({ rating: 5, comment: "" })
       toast.success("Review added!")
@@ -86,26 +74,18 @@ export default function ListingDetail() {
   }
 
   const handleWhatsApp = () => {
-    const phone = item.phone || item.sellerId?.phone
+    const phone = item?.phone || item?.sellerId?.phone
     if (!phone) return toast.error("Phone number not available")
-    const msg = encodeURIComponent(`Hi, I'm interested in your ad: ${item.title}\n${window.location.href}`)
+    const msg = encodeURIComponent(`Hi, I'm interested in your ad: ${item?.title}\n${window.location.href}`)
     window.open(`https://wa.me/92${phone.replace(/^0/, '')}?text=${msg}`, '_blank')
   }
 
   const handleStartChat = async () => {
     if (!me) return toast.error("Please login to chat")
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/chats/start`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}` 
-        },
-        body: JSON.stringify({ listingId: item._id, sellerId: item.sellerId?._id })
-      })
-      const chat = await res.json()
-      if (chat._id) {
-        navigate(`/chats?listingId=${item._id}`)
+      const chat = await startChat({ listingId: item?._id, sellerId: item?.sellerId?._id })
+      if (chat?._id) {
+        navigate(`/chats?listingId=${item?._id}`)
       }
     } catch (err) {
       toast.error("Failed to start chat")

@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from "react"
 import { io } from "socket.io-client"
-import { useLocation, useNavigate, Link } from "react-router-dom"
+import { useEffect, useState, useRef } from "react"
 import { useUser } from "../context/UserContext.jsx"
-import { toast } from "react-hot-toast"
+import { getChats, getMessages } from "../lib/api.js"
+import { Link, useSearchParams } from "react-router-dom"
+import { io } from "socket.io-client"
 
 const API = import.meta.env.VITE_API_URL || ""
 
 export default function Chats() {
   const { me } = useUser()
-  const { search } = useLocation()
-  const navigate = useNavigate()
-  const listingId = new URLSearchParams(search).get("listingId")
+  const [searchParams] = useSearchParams()
+  const listingId = searchParams.get("listingId")
   const token = localStorage.getItem("accessToken")
-  
+
   const [chats, setChats] = useState([])
   const [selectedChat, setSelectedChat] = useState(null)
   const [messages, setMessages] = useState([])
@@ -25,38 +26,25 @@ export default function Chats() {
     if (!token) return
     
     // Fetch all conversations
-    fetch(`${API}/api/chats`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(r => r.ok ? r.json() : [])
-      .then(data => {
-        const chatsData = Array.isArray(data) ? data : []
-        setChats(chatsData)
-        setLoading(false)
-        
-        // If listingId is in URL, find that chat
-        if (listingId) {
-          const existing = chatsData.find(c => c.listingId?._id === listingId)
-          if (existing) {
-            setSelectedChat(existing)
-          }
+    getChats().then(data => {
+      const chatsData = Array.isArray(data) ? data : []
+      setChats(chatsData)
+      setLoading(false)
+      
+      // If listingId is in URL, find that chat
+      if (listingId) {
+        const existing = chatsData.find(c => c.listingId?._id === listingId)
+        if (existing) {
+          setSelectedChat(existing)
         }
-      })
-      .catch(() => {
-        setChats([])
-        setLoading(false)
-      })
+      }
+    })
   }, [token, listingId])
 
   // Fetch messages when a chat is selected
   useEffect(() => {
     if (selectedChat?._id) {
-      fetch(`${API}/api/chats/${selectedChat._id}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(r => r.ok ? r.json() : [])
-        .then(data => setMessages(Array.isArray(data) ? data : []))
-        .catch(() => setMessages([]))
+      getMessages(selectedChat._id).then(setMessages)
     } else {
       setMessages([])
     }

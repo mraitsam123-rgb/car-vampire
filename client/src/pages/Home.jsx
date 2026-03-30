@@ -179,14 +179,13 @@ export default function Home() {
           </section>
         )}
 
-        {/* Bikes Section */}
-        {bikes.length > 0 && (
+        {bikes && (
           <section>
-            <div className="flex justify-between items-center mb-4 border-b-2 border-indigo-900 pb-1">
-              <h2 className="text-xl font-black uppercase text-indigo-900">Bikes</h2>
-              <Link to="/listings?category=Bikes" className="text-indigo-600 font-bold text-sm hover:underline">View more</Link>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-black text-[#002f34] uppercase italic">Bikes</h3>
+              <Link to="/listings?category=Bikes" className="text-xs font-black text-indigo-600 hover:underline uppercase tracking-widest">View More</Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {bikes.map(it => <ListingCard key={it._id} it={it} />)}
             </div>
           </section>
