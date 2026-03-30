@@ -1,5 +1,6 @@
 import { Message } from "./models/Message.js"
 import { Chat } from "./models/Chat.js"
+import { Notification } from "./models/Notification.js"
 import jwt from "jsonwebtoken"
 
 export const initSocketHandlers = (io) => {
@@ -50,12 +51,20 @@ export const initSocketHandlers = (io) => {
       
       // Notification logic: Emit to the OTHER user's personal room
       const otherUserId = String(chat.buyerId) === String(socket.userId) ? chat.sellerId : chat.buyerId
-      io.to(`user:${otherUserId}`).emit("notification", {
+      
+      // Save notification to database
+      const notif = await Notification.create({
+        userId: otherUserId,
+        senderId: socket.userId,
         type: "message",
-        chatId,
-        text: String(text).slice(0, 50),
-        senderId: socket.userId
+        text: String(text).slice(0, 100),
+        link: `/chats/${chatId}`
       })
+
+      // Fetch populated sender for the UI
+      const populatedNotif = await Notification.findById(notif._id).populate("senderId", "name avatar")
+
+      io.to(`user:${otherUserId}`).emit("notification", populatedNotif)
     })
   })
 }

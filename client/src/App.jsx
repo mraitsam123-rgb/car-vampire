@@ -13,6 +13,8 @@ import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
 import ErrorBoundary from "./components/ErrorBoundary.jsx"
+import NotificationDropdown from "./components/NotificationDropdown.jsx"
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "./lib/api.js"
 
 import { io } from "socket.io-client"
 
@@ -26,23 +28,40 @@ function AppContent() {
   const { me, logout, loading } = useUser()
   const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
+  const [showNotifs, setShowNotifs] = useState(false)
 
   useEffect(() => {
     if (!me) return
+    
+    // Initial fetch
+    getNotifications().then(setNotifications)
+
     const token = localStorage.getItem("accessToken")
     const socket = io(import.meta.env.VITE_API_URL || "", { auth: { token } })
 
     socket.on("notification", (data) => {
       setNotifications(prev => [data, ...prev])
-      toast.success(`New Message: ${data.text}...`, {
+      toast.success(`New Message: ${data.text.slice(0, 30)}...`, {
         icon: '💬',
         duration: 4000,
-        onClick: () => navigate(`/chats?listingId=${data.chatId}`)
+        onClick: () => navigate(data.link || "/chats")
       })
     })
 
     return () => socket.disconnect()
   }, [me, navigate])
+
+  const unreadCount = notifications?.filter(n => !n.isRead).length
+
+  const handleMarkRead = async (id) => {
+    await markNotificationAsRead(id)
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n))
+  }
+
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsAsRead()
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+  }
 
   const handleLogout = () => {
     logout()
@@ -61,14 +80,27 @@ function AppContent() {
             {me && (
               <>
                 <Link to="/chats" className="text-2xl hover:text-indigo-600 transition">💬</Link>
-                <button className="text-2xl hover:text-indigo-600 transition relative">
-                  🔔
-                  {notifications?.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                      {notifications?.length}
-                    </span>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowNotifs(!showNotifs)}
+                    className="text-2xl hover:text-indigo-600 transition relative"
+                  >
+                    🔔
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-black animate-pulse">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {showNotifs && (
+                    <NotificationDropdown 
+                      notifications={notifications}
+                      onMarkAsRead={handleMarkRead}
+                      onMarkAllRead={handleMarkAllRead}
+                      onClose={() => setShowNotifs(false)}
+                    />
                   )}
-                </button>
+                </div>
               </>
             )}
             {!me && (
@@ -103,6 +135,7 @@ function AppContent() {
           <Route path="/forgot" element={<Forgot />} />
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/chats" element={<Protected><Chats /></Protected>} />
+          <Route path="/chats/:chatId" element={<Protected><Chats /></Protected>} />
           <Route path="/profile/:id" element={<Profile />} />
         </Routes>
       </main>

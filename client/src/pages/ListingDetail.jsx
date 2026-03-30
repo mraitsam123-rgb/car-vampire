@@ -85,7 +85,7 @@ export default function ListingDetail() {
     try {
       const chat = await startChat({ listingId: item?._id, sellerId: item?.sellerId?._id })
       if (chat?._id) {
-        navigate(`/chats?listingId=${item?._id}`)
+        navigate(`/chats/${chat._id}`)
       }
     } catch (err) {
       toast.error("Failed to start chat")

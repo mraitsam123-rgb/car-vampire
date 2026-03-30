@@ -151,3 +151,30 @@ export const deleteListing = async (id) => {
     headers: { ...authHeaders(token) } 
   })
 }
+
+export const getNotifications = async () => {
+  const token = localStorage.getItem("accessToken")
+  try {
+    return await request(`${API}/api/notifications`, {
+      headers: { ...authHeaders(token) }
+    })
+  } catch (err) {
+    return []
+  }
+}
+
+export const markNotificationAsRead = async (id) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/notifications/${id}/read`, {
+    method: "PUT",
+    headers: { ...authHeaders(token) }
+  })
+}
+
+export const markAllNotificationsAsRead = async () => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/notifications/read-all`, {
+    method: "PUT",
+    headers: { ...authHeaders(token) }
+  })
+}

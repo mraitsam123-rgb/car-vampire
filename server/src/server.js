@@ -8,6 +8,7 @@ import { initCleanupJob } from "./utils/cleanup.js"
 import authRoutes from "./routes/auth.js"
 import listingRoutes from "./routes/listings.js"
 import chatRoutes from "./routes/chats.js"
+import notificationRoutes from "./routes/notifications.js"
 import { authMiddleware } from "./utils/auth.js"
 import { loginLimiter } from "./utils/ratelimit.js"
 import path from "path"
@@ -46,6 +47,7 @@ app.use("/api/auth/login", loginLimiter)
 app.use("/api/auth", authRoutes)
 app.use("/api/listings", listingRoutes)
 app.use("/api/chats", authMiddleware, chatRoutes)
+app.use("/api/notifications", authMiddleware, notificationRoutes)
 app.get("/api/health", (req, res) => res.json({ ok: true }))
 
 // Fallback to index.html for SPA

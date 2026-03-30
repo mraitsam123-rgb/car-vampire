@@ -17,15 +17,31 @@ const CATEGORIES = [
   { name: "Fashion", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png" },
 ]
 
+const CAR_MAKES = {
+  Toyota: ["Corolla", "Civic", "Prado", "Land Cruiser", "Hilux", "Vitz", "Yaris", "Fortuner"],
+  Honda: ["Civic", "City", "Vezel", "BR-V", "Accord", "CR-V"],
+  Suzuki: ["Alto", "Mehran", "Cultus", "Wagon R", "Swift", "Bolan", "Every", "Liana"],
+  Hyundai: ["Elantra", "Tucson", "Sonata", "Santa Fe"],
+  Kia: ["Sportage", "Picanto", "Stonic", "Sorento"],
+  Changan: ["Alsvin", "Karvaan"],
+  MG: ["HS", "ZS", "MG5"]
+}
+
+const MOBILE_BRANDS = ["Apple", "Samsung", "Vivo", "Oppo", "Infinix", "Xiaomi", "Realme", "Tecno", "Google", "Huawei"]
+
+const PROPERTY_TYPES = ["House", "Flat", "Plot", "Commercial", "Other"]
+
 export default function PostAd() {
+  const { me } = useUser()
   const [step, setStep] = useState(1)
   const [category, setCategory] = useState("")
   const [form, setForm] = useState({
     title: "", price: "", city: "", description: "",
     make: "", model: "", year: "", mileage: "", 
-    propertyType: "", area: "", bedrooms: "", phone: "",
-    showWhatsApp: false,
-    isWhatsApp: false
+    fuelType: "Petrol", transmission: "Manual", condition: "Used",
+    brand: "", storage: "128GB",
+    propertyType: "House", area: "", bedrooms: "1",
+    phone: "", showPhone: true, isWhatsApp: true
   })
   const [images, setImages] = useState([])
   const [uploading, setUploading] = useState(false)
@@ -42,33 +58,35 @@ export default function PostAd() {
     }
   }
 
-  const submit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!token) return toast.error("Please login to post an ad")
     if (!images || images?.length === 0) {
       toast.error("Please upload at least one image")
       return
     }
-    if (!form?.phone || form?.phone?.length < 10) {
+    if (!form?.phone || form?.phone?.length < 7) {
       toast.error("Please enter a valid phone number")
       return
     }
-    const loadingToast = toast.loading("Posting your ad...")
+
+    setUploading(true)
     try {
-      const payload = { 
-        ...form, 
-        category, 
-        price: Number(form.price),
-        year: form.year ? Number(form.year) : undefined,
-        mileage: form.mileage ? Number(form.mileage) : undefined,
-        bedrooms: form.bedrooms ? Number(form.bedrooms) : undefined,
-        images,
-        isWhatsApp: form.isWhatsApp
+      const payload = {
+        ...form,
+        category,
+        images: images.map(img => img.url),
+        sellerId: me?.id || me?._id
       }
-      await createListing(token, payload)
-      toast.success("Ad posted successfully!", { id: loadingToast })
-      navigate("/")
+      const data = await createListing(token, payload)
+      if (data?._id) {
+        toast.success("Ad posted successfully!")
+        navigate(`/listings/${data._id}`)
+      }
     } catch (err) {
-      toast.error("Failed to post ad. Please check all fields.", { id: loadingToast })
+      toast.error(err.message || "Failed to post ad")
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -105,7 +123,7 @@ export default function PostAd() {
       </div>
 
       <div className="grid grid-cols-12 gap-8">
-        <form onSubmit={submit} className="col-span-12 lg:col-span-8 bg-white border-2 border-gray-100 rounded-xl p-8 space-y-10 shadow-sm">
+        <form onSubmit={handleSubmit} className="col-span-12 lg:col-span-8 bg-white border-2 border-gray-100 rounded-xl p-8 space-y-10 shadow-sm">
           {/* Category Display */}
           <div className="flex items-center justify-between border-b-2 border-gray-50 pb-6">
             <div>
@@ -146,23 +164,116 @@ export default function PostAd() {
             <h3 className="font-black text-indigo-900 uppercase text-xs tracking-widest">Item Details</h3>
             
             {category === "Vehicles" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Make *</label>
-                  <input required placeholder="Select make" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.make} onChange={e=>setForm({...form, make: e.target.value})} />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Make *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.make} onChange={e=>setForm({...form, make: e.target.value, model: ""})}>
+                      <option value="">Select Make</option>
+                      {Object.keys(CAR_MAKES).map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Model *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value})} disabled={!form.make}>
+                      <option value="">Select Model</option>
+                      {form.make && CAR_MAKES[form.make].map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Year *</label>
+                    <input required type="number" placeholder="2024" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.year} onChange={e=>setForm({...form, year: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Fuel Type *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.fuelType} onChange={e=>setForm({...form, fuelType: e.target.value})}>
+                      <option value="Petrol">Petrol</option>
+                      <option value="Diesel">Diesel</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Electric">Electric</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Transmission *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.transmission} onChange={e=>setForm({...form, transmission: e.target.value})}>
+                      <option value="Manual">Manual</option>
+                      <option value="Automatic">Automatic</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Model *</label>
-                  <input required placeholder="Model" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Year *</label>
-                  <input required placeholder="Year" type="number" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.year} onChange={e=>setForm({...form, year: e.target.value})} />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mileage (KM) *</label>
+                  <input required type="number" placeholder="50000" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.mileage} onChange={e=>setForm({...form, mileage: e.target.value})} />
                 </div>
               </div>
             )}
 
-            <div className="space-y-4">
+            {category === "Mobiles" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Brand *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.brand} onChange={e=>setForm({...form, brand: e.target.value})}>
+                      <option value="">Select Brand</option>
+                      {MOBILE_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Storage *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.storage} onChange={e=>setForm({...form, storage: e.target.value})}>
+                      <option value="32GB">32GB</option>
+                      <option value="64GB">64GB</option>
+                      <option value="128GB">128GB</option>
+                      <option value="256GB">256GB</option>
+                      <option value="512GB">512GB</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {category === "Property" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Property Type *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.propertyType} onChange={e=>setForm({...form, propertyType: e.target.value})}>
+                      {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Bedrooms *</label>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.bedrooms} onChange={e=>setForm({...form, bedrooms: e.target.value})}>
+                      {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Area (e.g. 5 Marla, 1 Kanal) *</label>
+                  <input required placeholder="5 Marla" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.area} onChange={e=>setForm({...form, area: e.target.value})} />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase mb-3">Condition *</label>
+              <div className="flex gap-4">
+                {["New", "Used"].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm({...form, condition: c})}
+                    className={`px-8 py-2 rounded-full border-2 font-black text-[10px] uppercase transition-all ${form.condition === c ? 'bg-indigo-900 border-indigo-900 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-200'}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t-2 border-gray-50">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Ad Title *</label>
                 <input required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.title} onChange={e=>setForm({...form, title: e.target.value})} maxLength={70} />
@@ -197,54 +308,43 @@ export default function PostAd() {
           {/* Seller Details */}
           <div className="space-y-6 pt-6 border-t-2 border-gray-50">
             <h3 className="font-black text-indigo-900 uppercase text-xs tracking-widest">Review your details</h3>
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center font-black text-indigo-900 border-2 border-white shadow-sm overflow-hidden">
+                {me?.avatar ? <img src={me.avatar} className="w-full h-full object-cover" /> : me?.name?.[0]}
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Seller Name</p>
+                <p className="font-black text-indigo-900 uppercase">{me?.name}</p>
+              </div>
+            </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Your Name</label>
-                <div className="font-black text-indigo-900 px-1">S. Attsam Shah</div>
-              </div>
-              <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Phone Number *</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-4 border-2 border-r-0 border-gray-100 rounded-l-lg bg-gray-50 text-gray-500 font-black">+92</span>
-                  <input 
-                    required 
-                    type="tel"
-                    placeholder="3XXXXXXXXX" 
-                    className="w-full border-2 border-gray-100 rounded-r-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition font-black" 
-                    value={form.phone} 
-                    onChange={e=>setForm({...form, phone: e.target.value.replace(/\D/g, '')})} 
-                    maxLength={10}
-                  />
+                <div className="relative">
+                  <span className="absolute left-4 top-3.5 font-black text-gray-400">+92</span>
+                  <input required placeholder="300 1234567" className="w-full border-2 border-gray-100 rounded-lg pl-12 pr-4 py-3 focus:border-indigo-900 focus:outline-none transition font-black" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
                 </div>
               </div>
-              <div className="flex flex-col gap-4 p-4 bg-indigo-50/50 rounded-xl border-2 border-indigo-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-black text-indigo-900 uppercase tracking-tight">Show my phone number in ads</span>
-                  <button 
-                    type="button"
-                    onClick={() => setForm({...form, showWhatsApp: !form.showWhatsApp})}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${form.showWhatsApp ? 'bg-indigo-900' : 'bg-gray-300'}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.showWhatsApp ? 'left-7' : 'left-1'}`}></div>
-                  </button>
+              <div className="flex items-center justify-between p-4 border-2 border-gray-50 rounded-xl">
+                <div>
+                  <p className="font-black text-indigo-900 text-xs uppercase">Show my phone number</p>
+                  <p className="text-[9px] text-gray-400 font-bold uppercase">Buyers will be able to call you directly</p>
                 </div>
-                <div className="flex items-center justify-between border-t border-indigo-100 pt-4">
-                  <span className="text-sm font-black text-indigo-900 uppercase tracking-tight italic">Is this a WhatsApp number?</span>
-                  <button 
-                    type="button"
-                    onClick={() => setForm({...form, isWhatsApp: !form.isWhatsApp})}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${form.isWhatsApp ? 'bg-[#25D366]' : 'bg-gray-300'}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.isWhatsApp ? 'left-7' : 'left-1'}`}></div>
-                  </button>
-                </div>
+                <button 
+                  type="button"
+                  onClick={() => setForm({...form, showPhone: !form.showPhone})}
+                  className={`w-12 h-6 rounded-full transition-all relative ${form.showPhone ? 'bg-indigo-900' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.showPhone ? 'right-1' : 'left-1'}`}></div>
+                </button>
               </div>
             </div>
           </div>
 
           <button 
+            type="submit" 
             disabled={uploading}
-            className="w-full bg-indigo-900 text-white font-black py-5 rounded-xl hover:bg-indigo-800 transition-all shadow-xl hover:shadow-indigo-900/20 uppercase tracking-widest mt-10 disabled:bg-gray-400"
+            className="w-full py-5 bg-[#002f34] text-white font-black rounded hover:bg-[#003d44] transition-all shadow-xl uppercase tracking-widest text-sm disabled:opacity-50"
           >
             {uploading ? "Uploading Photos..." : "Post Now"}
           </button>

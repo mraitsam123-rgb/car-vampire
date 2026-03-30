@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from "react"
 import { io } from "socket.io-client"
 import { useUser } from "../context/UserContext.jsx"
 import { getChats, getMessages } from "../lib/api.js"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useSearchParams, useParams } from "react-router-dom"
 
 const API = import.meta.env.VITE_API_URL || ""
 
 export default function Chats() {
   const { me } = useUser()
+  const { chatId } = useParams()
   const [searchParams] = useSearchParams()
   const listingId = searchParams.get("listingId")
   const token = localStorage.getItem("accessToken")
@@ -29,15 +30,16 @@ export default function Chats() {
       setChats(chatsData)
       setLoading(false)
       
-      // If listingId is in URL, find that chat
-      if (listingId) {
+      // Handle navigation from listing detail or notification
+      if (chatId) {
+        const existing = chatsData.find(c => c._id === chatId)
+        if (existing) setSelectedChat(existing)
+      } else if (listingId) {
         const existing = chatsData.find(c => c.listingId?._id === listingId)
-        if (existing) {
-          setSelectedChat(existing)
-        }
+        if (existing) setSelectedChat(existing)
       }
     })
-  }, [token, listingId])
+  }, [token, listingId, chatId])
 
   // Fetch messages when a chat is selected
   useEffect(() => {

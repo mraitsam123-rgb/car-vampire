@@ -68,7 +68,7 @@ export default function Home() {
       {/* Main Search Bar */}
       <div className="bg-white sticky top-0 z-50 border-b py-2">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-4">
-          <Link to="/" className="text-3xl font-black text-indigo-900 shrink-0 italic italic">
+          <Link to="/" className="text-3xl font-black text-indigo-900 shrink-0 italic">
             OLX
           </Link>
           
@@ -116,10 +116,10 @@ export default function Home() {
               to={`/listings?category=${cat.name}`} 
               className="flex flex-col items-center text-center group"
             >
-              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-2 shadow-sm border border-gray-100 group-hover:border-indigo-200 transition p-2">
-                <img src={cat.icon} alt={cat.name} className="w-10 h-10 object-contain group-hover:scale-110 transition" />
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-2 shadow-sm border border-gray-100 group-hover:border-indigo-200 group-hover:shadow-md transition-all duration-300 p-2">
+                <img src={cat.icon} alt={cat.name} className="w-12 h-12 object-contain group-hover:scale-110 transition duration-300" />
               </div>
-              <span className="text-[9px] font-black text-gray-700 uppercase leading-tight group-hover:text-indigo-900">{cat.name}</span>
+              <span className="text-[10px] font-black text-gray-700 uppercase leading-tight group-hover:text-indigo-900 transition-colors">{cat.name}</span>
             </Link>
           ))}
         </div>
