@@ -52,6 +52,13 @@ export default function Listings() {
                   <option value="Property">Property</option>
                   <option value="Mobiles">Mobiles</option>
                   <option value="Electronics">Electronics</option>
+                  <option value="Bikes">Bikes</option>
+                  <option value="Business">Business</option>
+                  <option value="Services">Services</option>
+                  <option value="Jobs">Jobs</option>
+                  <option value="Animals">Animals</option>
+                  <option value="Furniture">Furniture</option>
+                  <option value="Fashion">Fashion</option>
                 </select>
               </div>
 

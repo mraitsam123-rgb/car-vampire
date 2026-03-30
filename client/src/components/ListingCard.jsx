@@ -42,7 +42,18 @@ export default function ListingCard({ it }) {
         <div className="flex justify-between items-start mb-1">
           <div className="text-lg font-bold text-gray-900">Rs {it.price?.toLocaleString()}</div>
         </div>
-        <div className="text-sm text-gray-600 line-clamp-1 mb-3">{it.title}</div>
+        <div className="text-sm text-gray-600 line-clamp-1 mb-2">{it.title}</div>
+        
+        {/* Rating Display */}
+        <div className="flex items-center gap-1 mb-3">
+          <div className="flex text-yellow-400 text-xs">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <span key={s}>{it.rating >= s ? "★" : it.rating >= s - 0.5 ? "⯪" : "☆"}</span>
+            ))}
+          </div>
+          <span className="text-[10px] font-bold text-gray-400">({it.reviewCount || 0})</span>
+        </div>
+
         <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider">
           <span>{it.city}</span>
           <span>{new Date(it.createdAt).toLocaleDateString()}</span>

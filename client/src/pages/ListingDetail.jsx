@@ -15,6 +15,9 @@ export default function ListingDetail() {
   const [daysLeft, setDaysLeft] = useState(null)
   const [showPhone, setShowPhone] = useState(false)
 
+  const [reviews, setReviews] = useState([])
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" })
+
   const isFav = me?.favorites?.includes(id)
 
   useEffect(() => {
@@ -32,7 +35,36 @@ export default function ListingDetail() {
       fetchListings({ category: r.category, limit: 4 })
         .then(data => setSimilarItems(data.items?.filter(i => i._id !== r._id) || []))
     })
+
+    // Fetch reviews
+    fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}/reviews`)
+      .then(r => r.json())
+      .then(data => setReviews(Array.isArray(data) ? data : []))
   }, [id])
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault()
+    if (!me) return toast.error("Please login to leave a review")
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}/reviews`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}` 
+        },
+        body: JSON.stringify(newReview)
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setReviews([data, ...reviews])
+      setNewReview({ rating: 5, comment: "" })
+      toast.success("Review added!")
+      // Refresh item for new rating
+      getListing(id).then(setItem)
+    } catch (err) {
+      toast.error("Failed to add review")
+    }
+  }
 
   const handleToggleFav = async () => {
     if (!me) return toast.error("Please login to favorite")
@@ -131,6 +163,11 @@ export default function ListingDetail() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <h1 className="text-3xl font-black text-gray-900">{formatPrice(item.price)}</h1>
+                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-full border border-yellow-200 ml-2">
+                    <span className="text-yellow-500 text-sm">★</span>
+                    <span className="text-[10px] font-black text-yellow-700">{item.rating?.toFixed(1) || "0.0"}</span>
+                    <span className="text-[8px] font-bold text-yellow-400">({item.reviewCount || 0})</span>
+                  </div>
                   {daysLeft !== null && daysLeft <= 10 && (
                     <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded-full uppercase">
                       ⚠️ Expiring in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
@@ -208,6 +245,64 @@ export default function ListingDetail() {
             <div>
               <h3 className="text-xl font-black mb-4 uppercase italic text-indigo-900">Description</h3>
               <div className="text-gray-700 whitespace-pre-wrap leading-relaxed border-t-2 border-gray-50 pt-6 font-medium">{item.description}</div>
+            </div>
+
+            {/* Review Section */}
+            <div className="border-t-2 border-gray-50 pt-8">
+              <h3 className="text-xl font-black mb-6 uppercase italic text-indigo-900">Reviews ({reviews.length})</h3>
+              
+              <form onSubmit={handleReviewSubmit} className="mb-10 bg-gray-50 p-6 rounded-xl border-2 border-indigo-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex text-2xl text-yellow-400">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <button 
+                        key={s} 
+                        type="button" 
+                        onClick={() => setNewReview({ ...newReview, rating: s })}
+                        className="hover:scale-125 transition"
+                      >
+                        {newReview.rating >= s ? "★" : "☆"}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xs font-black uppercase text-gray-400 tracking-widest">Select Rating</span>
+                </div>
+                <textarea 
+                  required
+                  className="w-full border-2 border-gray-100 rounded-lg p-4 focus:border-indigo-900 focus:outline-none transition font-medium text-sm mb-4"
+                  placeholder="Write your review here..."
+                  rows="3"
+                  value={newReview.comment}
+                  onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
+                />
+                <button type="submit" className="px-8 py-3 bg-indigo-900 text-white font-black rounded-full hover:bg-indigo-800 transition shadow-lg uppercase tracking-widest text-xs">Post Review</button>
+              </form>
+
+              <div className="space-y-6">
+                {reviews.length === 0 ? (
+                  <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs py-10">No reviews yet. Be the first to review!</p>
+                ) : (
+                  reviews.map(r => (
+                    <div key={r._id} className="border-b pb-6 last:border-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-black text-indigo-900 border-2 border-white shadow-sm overflow-hidden">
+                          {r.userId?.avatar ? <img src={r.userId.avatar} className="w-full h-full object-cover" /> : r.userId?.name?.[0]}
+                        </div>
+                        <div>
+                          <p className="font-black text-sm uppercase italic text-indigo-900">{r.userId?.name}</p>
+                          <div className="flex text-yellow-400 text-xs">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <span key={s}>{r.rating >= s ? "★" : "☆"}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className="ml-auto text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(r.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-600 pl-13">{r.comment}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 

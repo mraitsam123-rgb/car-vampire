@@ -39,7 +39,15 @@ export default function Profile() {
     try {
       const res = await updateMe(formData)
       if (res.error) throw new Error(res.error)
-      setGlobalMe(res.user)
+      
+      // Update context and force immediate state refresh
+      const updatedUser = { 
+        ...me, 
+        ...res.user, 
+        id: res.user.id || res.user._id 
+      }
+      setGlobalMe(updatedUser)
+      
       toast.success("Profile updated successfully")
       setIsEditing(false)
     } catch (err) {

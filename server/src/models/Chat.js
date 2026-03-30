@@ -5,6 +5,7 @@ const chatSchema = new mongoose.Schema(
     listingId: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true, index: true },
     buyerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     sellerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    lastMessage: { type: String },
     lastMessageAt: { type: Date, default: Date.now }
   },
   { timestamps: true }

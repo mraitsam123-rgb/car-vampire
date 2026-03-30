@@ -52,9 +52,21 @@ const listingSchema = new mongoose.Schema(
       type: Date, 
       default: () => new Date(+new Date() + 30*24*60*60*1000), 
       index: { expires: 0 } 
-    }
+    },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 }
   },
   { timestamps: { createdAt: "createdAt" } }
+)
+
+const reviewSchema = new mongoose.Schema(
+  {
+    listingId: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true, index: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, required: true },
+  },
+  { timestamps: true }
 )
 
 listingSchema.index({ title: "text", description: "text" })
@@ -66,3 +78,4 @@ listingSchema.pre("save", function (next) {
 })
 
 export const Listing = mongoose.model("Listing", listingSchema)
+export const Review = mongoose.model("Review", reviewSchema)

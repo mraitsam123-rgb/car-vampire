@@ -25,15 +25,34 @@ router.get("/", async (req, res) => {
   res.json(chats)
 })
 
-router.get("/:chatId/messages", async (req, res) => {
+router.get("/:chatId/messages", authMiddleware, async (req, res) => {
+  const chat = await Chat.findById(req.params.chatId)
+  if (!chat) return res.status(404).json({ error: "chat_not_found" })
+  
+  // Authorization check
+  if (String(chat.buyerId) !== String(req.user._id) && String(chat.sellerId) !== String(req.user._id)) {
+    return res.status(403).json({ error: "unauthorized" })
+  }
+
   const messages = await Message.find({ chatId: req.params.chatId }).sort({ createdAt: 1 })
   res.json(messages)
 })
 
-router.post("/:chatId/messages", async (req, res) => {
+router.post("/:chatId/messages", authMiddleware, async (req, res) => {
+  const chat = await Chat.findById(req.params.chatId)
+  if (!chat) return res.status(404).json({ error: "chat_not_found" })
+
+  // Authorization check
+  if (String(chat.buyerId) !== String(req.user._id) && String(chat.sellerId) !== String(req.user._id)) {
+    return res.status(403).json({ error: "unauthorized" })
+  }
+
   const text = String(req.body.text || "").slice(0, 2000)
   const msg = await Message.create({ chatId: req.params.chatId, senderId: req.user._id, text })
-  await Chat.findByIdAndUpdate(req.params.chatId, { lastMessageAt: new Date() })
+  await Chat.findByIdAndUpdate(req.params.chatId, { 
+    lastMessage: text.slice(0, 100),
+    lastMessageAt: new Date() 
+  })
   res.json(msg)
 })
 

@@ -14,7 +14,8 @@ export default function Chats() {
   const token = localStorage.getItem("accessToken")
   
   const [chats, setChats] = useState([])
-  const [chat, setChat] = useState(null)
+  const [selectedChat, setSelectedChat] = useState(null)
+  const [messages, setMessages] = useState([])
   const [content, setContent] = useState("")
   const [loading, setLoading] = useState(true)
   const socketRef = useRef(null)
@@ -32,54 +33,70 @@ export default function Chats() {
         setChats(data)
         setLoading(false)
         
-        // If listingId is in URL, find or start that chat
+        // If listingId is in URL, find that chat
         if (listingId) {
           const existing = data.find(c => c.listingId?._id === listingId)
           if (existing) {
-            setChat(existing)
-          } else {
-            // Start new chat logic would go here if needed
-            // But usually the Chat button in ListingDetail would call /start first
+            setSelectedChat(existing)
           }
         }
       })
   }, [token, listingId])
+
+  // Fetch messages when a chat is selected
+  useEffect(() => {
+    if (selectedChat?._id) {
+      fetch(`${API}/api/chats/${selectedChat._id}/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(setMessages)
+    } else {
+      setMessages([])
+    }
+  }, [selectedChat?._id, token])
 
   useEffect(() => {
     if (!token) return
     const socket = io(API, { auth: { token } })
     socketRef.current = socket
 
-    if (chat?._id) {
-      socket.emit("join", chat._id)
-    }
-
     socket.on("message", (msg) => {
-      if (chat && msg.chatId === chat._id) {
-        setChat(prev => ({
-          ...prev,
-          messages: [...(prev.messages || []), msg]
-        }))
+      // If the message belongs to the currently selected chat, add it to messages
+      if (selectedChat?._id === msg.chatId) {
+        setMessages(prev => [...prev, msg])
       }
-      // Update chats list last message
-      setChats(prev => prev.map(c => 
-        c._id === msg.chatId ? { ...c, updatedAt: new Date() } : c
-      ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+    })
+
+    socket.on("chat_update", (data) => {
+      // Update the chat list (inbox) with the new last message and timestamp
+      setChats(prev => prev.map(c => {
+        if (c._id === data.chatId) {
+          return { ...c, lastMessage: data.lastMessage, updatedAt: data.updatedAt }
+        }
+        return c
+      }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
     })
 
     return () => socket.disconnect()
-  }, [token, chat?._id])
+  }, [token, selectedChat?._id])
+
+  useEffect(() => {
+    if (selectedChat?._id && socketRef.current) {
+      socketRef.current.emit("join", selectedChat._id)
+    }
+  }, [selectedChat?._id])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [chat?.messages])
+  }, [messages])
 
   const send = (e) => {
     e.preventDefault()
-    if (!chat || !content.trim()) return
+    if (!selectedChat || !content.trim()) return
     
     socketRef.current.emit("message", { 
-      chatId: chat._id, 
+      chatId: selectedChat._id, 
       text: content 
     })
     setContent("")
@@ -90,30 +107,35 @@ export default function Chats() {
   return (
     <div className="bg-gray-50 h-[calc(100vh-72px)] overflow-hidden">
       <div className="max-w-7xl mx-auto h-full flex flex-col md:flex-row shadow-lg">
-        {/* Conversations List */}
+        {/* Conversations List (Inbox) */}
         <aside className="w-full md:w-80 bg-white border-r flex flex-col h-1/3 md:h-full">
           <div className="p-4 border-b">
-            <h2 className="text-xl font-black text-indigo-900 uppercase italic">Chats</h2>
+            <h2 className="text-xl font-black text-indigo-900 uppercase italic">Inbox</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             {chats.length === 0 ? (
-              <div className="p-10 text-center text-gray-400 font-bold text-sm uppercase">No chats yet</div>
+              <div className="p-10 text-center text-gray-400 font-bold text-sm uppercase">No messages yet</div>
             ) : (
               chats.map(c => {
-                const other = c.buyerId === me?._id ? c.sellerId : c.buyerId
-                const isSelected = chat?._id === c._id
+                const isBuyer = String(c.buyerId?._id || c.buyerId) === String(me?.id || me?._id)
+                const other = isBuyer ? c.sellerId : c.buyerId
+                const isSelected = selectedChat?._id === c._id
                 return (
                   <button
                     key={c._id}
-                    onClick={() => setChat(c)}
+                    onClick={() => setSelectedChat(c)}
                     className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 border-b transition ${isSelected ? 'bg-indigo-50 border-l-4 border-l-indigo-900' : ''}`}
                   >
-                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center font-black text-indigo-900 shrink-0 border-2 border-white shadow-sm">
-                      {typeof other === 'object' ? other?.name?.[0] : 'U'}
+                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center font-black text-indigo-900 shrink-0 border-2 border-white shadow-sm overflow-hidden">
+                      {other?.avatar ? <img src={other.avatar} className="w-full h-full object-cover" /> : other?.name?.[0]}
                     </div>
-                    <div className="text-left overflow-hidden">
-                      <div className="font-black text-sm truncate uppercase">{typeof other === 'object' ? other?.name : 'User'}</div>
+                    <div className="text-left overflow-hidden flex-1">
+                      <div className="flex justify-between items-start">
+                        <div className="font-black text-sm truncate uppercase">{other?.name || 'User'}</div>
+                        <div className="text-[8px] font-bold text-gray-400 uppercase">{new Date(c.updatedAt || c.lastMessageAt || c.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</div>
+                      </div>
                       <div className="text-[10px] text-gray-500 truncate font-bold uppercase">{c.listingId?.title}</div>
+                      <div className="text-[10px] text-indigo-900 truncate font-medium mt-1 italic">{c.lastMessage || 'No messages yet'}</div>
                     </div>
                   </button>
                 )
@@ -124,28 +146,36 @@ export default function Chats() {
 
         {/* Chat Window */}
         <main className="flex-1 bg-white flex flex-col h-2/3 md:h-full relative">
-          {chat ? (
+          {selectedChat ? (
             <>
               {/* Chat Header */}
               <div className="p-3 border-b flex items-center justify-between bg-white sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-black text-indigo-900 border-2 border-white shadow-sm">
-                    {(chat.buyerId === me?._id ? chat.sellerId : chat.buyerId)?.name?.[0] || 'U'}
-                  </div>
-                  <div>
-                    <div className="font-black text-sm uppercase italic">{(chat.buyerId === me?._id ? chat.sellerId : chat.buyerId)?.name || 'User'}</div>
-                    <Link to={`/listings/${chat.listingId?._id}`} className="text-[10px] text-indigo-600 hover:underline font-black uppercase tracking-tight">View: {chat.listingId?.title}</Link>
-                  </div>
+                  {(() => {
+                    const isBuyer = String(selectedChat.buyerId?._id || selectedChat.buyerId) === String(me?.id || me?._id)
+                    const other = isBuyer ? selectedChat.sellerId : selectedChat.buyerId
+                    return (
+                      <>
+                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-black text-indigo-900 border-2 border-white shadow-sm overflow-hidden">
+                          {other?.avatar ? <img src={other.avatar} className="w-full h-full object-cover" /> : other?.name?.[0]}
+                        </div>
+                        <div>
+                          <div className="font-black text-sm uppercase italic">{other?.name || 'User'}</div>
+                          <Link to={`/listings/${selectedChat.listingId?._id}`} className="text-[10px] text-indigo-600 hover:underline font-black uppercase tracking-tight">View: {selectedChat.listingId?.title}</Link>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
-                <Link to={`/listings?category=${chat.listingId?.category}`} className="text-[10px] bg-gray-100 px-3 py-1.5 rounded-full font-black hover:bg-gray-200 transition uppercase tracking-widest">
-                  {chat.listingId?.category}
+                <Link to={`/listings?category=${selectedChat.listingId?.category}`} className="text-[10px] bg-gray-100 px-3 py-1.5 rounded-full font-black hover:bg-gray-200 transition uppercase tracking-widest">
+                  {selectedChat.listingId?.category}
                 </Link>
               </div>
 
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 flex flex-col">
                 <div className="mt-auto"></div>
-                {chat.messages?.map((m, i) => (
+                {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.senderId === me?._id ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow-sm font-medium ${m.senderId === me?._id ? 'bg-indigo-900 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none'}`}>
                       {m.text}

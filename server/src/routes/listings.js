@@ -1,11 +1,43 @@
 import { Router } from "express"
 import { z } from "zod"
 import { authMiddleware } from "../utils/auth.js"
-import { Listing } from "../models/Listing.js"
+import { Listing, Review } from "../models/Listing.js"
 import { upload, initUploads, uploadBuffer, deleteRemote } from "../utils/upload.js"
 
 const router = Router()
 initUploads()
+
+// Review routes
+router.post("/:id/reviews", authMiddleware, async (req, res) => {
+  const { rating, comment } = req.body
+  if (!rating || !comment) return res.status(400).json({ error: "missing_fields" })
+  
+  const listing = await Listing.findById(req.params.id)
+  if (!listing) return res.status(404).json({ error: "not_found" })
+
+  const review = await Review.create({
+    listingId: listing._id,
+    userId: req.user._id,
+    rating,
+    comment
+  })
+
+  // Update listing rating
+  const reviews = await Review.find({ listingId: listing._id })
+  const avg = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+  listing.rating = avg
+  listing.reviewCount = reviews.length
+  await listing.save()
+
+  res.json(review)
+})
+
+router.get("/:id/reviews", async (req, res) => {
+  const reviews = await Review.find({ listingId: req.params.id })
+    .populate("userId", "name avatar")
+    .sort({ createdAt: -1 })
+  res.json(reviews)
+})
 
 const createSchema = z.object({
   category: z.enum(["Vehicles", "Property", "Mobiles", "Electronics", "Bikes", "Business", "Services", "Jobs", "Animals", "Furniture", "Fashion"]),

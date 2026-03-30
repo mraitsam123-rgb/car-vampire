@@ -1,5 +1,6 @@
+import { Toaster, toast } from "react-hot-toast"
+import { useEffect, useState } from "react"
 import { Routes, Route, Navigate, Link, useNavigate } from "react-router-dom"
-import { Toaster } from "react-hot-toast"
 import Home from "./pages/Home.jsx"
 import Listings from "./pages/Listings.jsx"
 import ListingDetail from "./pages/ListingDetail.jsx"
@@ -12,6 +13,8 @@ import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
 
+import { io } from "socket.io-client"
+
 const Protected = ({ children }) => {
   const token = localStorage.getItem("accessToken")
   if (!token) return <Navigate to="/login" replace />
@@ -21,6 +24,24 @@ const Protected = ({ children }) => {
 function AppContent() {
   const { me, logout, loading } = useUser()
   const navigate = useNavigate()
+  const [notifications, setNotifications] = useState([])
+
+  useEffect(() => {
+    if (!me) return
+    const token = localStorage.getItem("accessToken")
+    const socket = io(import.meta.env.VITE_API_URL || "", { auth: { token } })
+
+    socket.on("notification", (data) => {
+      setNotifications(prev => [data, ...prev])
+      toast.success(`New Message: ${data.text}...`, {
+        icon: '💬',
+        duration: 4000,
+        onClick: () => navigate(`/chats?listingId=${data.chatId}`)
+      })
+    })
+
+    return () => socket.disconnect()
+  }, [me, navigate])
 
   const handleLogout = () => {
     logout()
@@ -41,7 +62,11 @@ function AppContent() {
                 <Link to="/chats" className="text-2xl hover:text-indigo-600 transition">💬</Link>
                 <button className="text-2xl hover:text-indigo-600 transition relative">
                   🔔
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">2</span>
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
                 </button>
               </>
             )}
