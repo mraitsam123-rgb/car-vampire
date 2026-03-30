@@ -11,6 +11,9 @@ import Forgot from "./pages/Forgot.jsx"
 import Dashboard from "./pages/Dashboard.jsx"
 import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
+import About from "./pages/About.jsx"
+import Privacy from "./pages/Privacy.jsx"
+import Terms from "./pages/Terms.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
 import ErrorBoundary from "./components/ErrorBoundary.jsx"
 import NotificationDropdown from "./components/NotificationDropdown.jsx"
@@ -140,6 +143,9 @@ function AppContent() {
           <Route path="/chats" element={<Protected><Chats /></Protected>} />
           <Route path="/chats/:chatId" element={<Protected><Chats /></Protected>} />
           <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </main>
       <footer className="bg-white border-t">
@@ -151,9 +157,28 @@ function AppContent() {
             </Link>
             <div className="text-sm text-gray-500 font-bold uppercase tracking-widest">© 2026 QuickBuy Pakistan</div>
             <div className="flex gap-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              <Link to="/" className="hover:text-indigo-600">About Us</Link>
-              <Link to="/" className="hover:text-indigo-600">Privacy Policy</Link>
-              <Link to="/" className="hover:text-indigo-600">Terms of Service</Link>
+              <Link to="/about" className="hover:text-indigo-600">About Us</Link>
+              <Link to="/privacy" className="hover:text-indigo-600">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-indigo-600">Terms of Service</Link>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <div className="text-xs font-black text-gray-500 uppercase tracking-widest">Get the App</div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => toast.success("App coming soon")}
+                className="hover:scale-105 transition"
+                aria-label="Get it on App Store"
+              >
+                <img src="/logos/apple store.png" alt="App Store" className="h-10 w-auto" />
+              </button>
+              <button
+                onClick={() => toast.success("App coming soon")}
+                className="hover:scale-105 transition"
+                aria-label="Get it on Google Play"
+              >
+                <img src="/logos/play store.png" alt="Google Play" className="h-10 w-auto" />
+              </button>
             </div>
           </div>
         </div>

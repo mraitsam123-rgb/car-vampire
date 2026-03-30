@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { fetchListings } from "../lib/api.js"
 import ListingCard from "../components/ListingCard.jsx"
+import { toast } from "react-hot-toast"
 
 const CATEGORIES = [
   { name: "Mobiles", icon: "/logos/mobile logo.png" },
@@ -209,8 +210,18 @@ export default function Home() {
             <p className="text-indigo-200 text-lg md:text-xl font-bold uppercase tracking-widest">Buy, sell and find anything using the app on your mobile.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-6">
-            <img src="https://www.olx.com.pk/assets/iconAppStore_noinline.a739345fb4c14b6e40397a0505e179c0.svg" className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" alt="App Store" />
-            <img src="https://www.olx.com.pk/assets/iconGooglePlayStore_noinline.98928337859396cd039673f95b0cf5d8.svg" className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" alt="Google Play" />
+            <img 
+              src="/logos/apple store.png" 
+              className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" 
+              alt="App Store" 
+              onClick={() => toast.success("App coming soon")}
+            />
+            <img 
+              src="/logos/play store.png" 
+              className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" 
+              alt="Google Play" 
+              onClick={() => toast.success("App coming soon")}
+            />
           </div>
         </div>
       </div>
