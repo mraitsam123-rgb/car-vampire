@@ -18,6 +18,7 @@ export const getMe = async (token) => {
   const r = await fetch(`${API}/api/auth/me`, {
     headers: { ...authHeaders(token) }
   })
+  if (!r.ok) throw new Error("auth_failed")
   return r.json()
 }
 
@@ -31,6 +32,7 @@ export const updateMe = async (data) => {
     },
     body: JSON.stringify(data)
   })
+  if (!r.ok) throw new Error("update_failed")
   return r.json()
 }
 
@@ -44,17 +46,20 @@ export const toggleFavorite = async (listingId) => {
     },
     body: JSON.stringify({ listingId })
   })
+  if (!r.ok) throw new Error("fav_failed")
   return r.json()
 }
 
 export const fetchListings = async (params = {}) => {
   const qs = new URLSearchParams(params).toString()
   const r = await fetch(`${API}/api/listings?${qs}`)
+  if (!r.ok) return { items: [], total: 0, page: 1, pages: 1 }
   return r.json()
 }
 
 export const getListing = async (id) => {
   const r = await fetch(`${API}/api/listings/${id}`)
+  if (!r.ok) throw new Error("not_found")
   return r.json()
 }
 

@@ -22,6 +22,7 @@ export default function ListingDetail() {
 
   useEffect(() => {
     getListing(id).then(r => {
+      if (!r) return
       setItem(r)
       
       // Calculate days left for 30-day expiry
@@ -32,14 +33,21 @@ export default function ListingDetail() {
       }
 
       // Fetch similar ads
-      fetchListings({ category: r.category, limit: 4 })
-        .then(data => setSimilarItems(data.items?.filter(i => i._id !== r._id) || []))
+      if (r.category) {
+        fetchListings({ category: r.category, limit: 4 })
+          .then(data => setSimilarItems(data?.items?.filter(i => i._id !== r._id) || []))
+          .catch(() => setSimilarItems([]))
+      }
+    }).catch(() => {
+      setItem(null)
+      toast.error("Listing not found")
     })
 
     // Fetch reviews
     fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}/reviews`)
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : [])
       .then(data => setReviews(Array.isArray(data) ? data : []))
+      .catch(() => setReviews([]))
   }, [id])
 
   const handleReviewSubmit = async (e) => {

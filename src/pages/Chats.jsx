@@ -28,18 +28,23 @@ export default function Chats() {
     fetch(`${API}/api/chats`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : [])
       .then(data => {
-        setChats(data)
+        const chatsData = Array.isArray(data) ? data : []
+        setChats(chatsData)
         setLoading(false)
         
         // If listingId is in URL, find that chat
         if (listingId) {
-          const existing = data.find(c => c.listingId?._id === listingId)
+          const existing = chatsData.find(c => c.listingId?._id === listingId)
           if (existing) {
             setSelectedChat(existing)
           }
         }
+      })
+      .catch(() => {
+        setChats([])
+        setLoading(false)
       })
   }, [token, listingId])
 
@@ -49,8 +54,9 @@ export default function Chats() {
       fetch(`${API}/api/chats/${selectedChat._id}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-        .then(r => r.json())
-        .then(setMessages)
+        .then(r => r.ok ? r.json() : [])
+        .then(data => setMessages(Array.isArray(data) ? data : []))
+        .catch(() => setMessages([]))
     } else {
       setMessages([])
     }

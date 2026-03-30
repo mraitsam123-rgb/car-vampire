@@ -21,12 +21,12 @@ export default function Dashboard() {
         setMyAds(myAdsRes.items || [])
 
         // Fetch favorite listings if any
-        if (me.favorites?.length > 0) {
+        if (me.favorites && Array.isArray(me.favorites) && me.favorites.length > 0) {
           const favPromises = me.favorites.map(id => 
-            fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}`).then(r => r.json())
+            fetch(`${import.meta.env.VITE_API_URL || ""}/api/listings/${id}`).then(r => r.ok ? r.json() : null)
           )
           const favResults = await Promise.all(favPromises)
-          setFavorites(favResults.filter(f => !f.error))
+          setFavorites(favResults.filter(f => f && !f.error))
         } else {
           setFavorites([])
         }
