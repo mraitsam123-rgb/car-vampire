@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createListing, uploadImages } from "../lib/api.js"
 import { toast } from "react-hot-toast"
+import { useUser } from "../context/UserContext.jsx"
 
 const CATEGORIES = [
   { name: "Mobiles", icon: "https://www.olx.com.pk/assets/mobiles.8bc37032159080bd1d9439ca2148ad4a.png" },
@@ -75,6 +76,10 @@ export default function PostAd() {
       const payload = {
         ...form,
         category,
+        price: Number(form.price),
+        year: form.year ? Number(form.year) : undefined,
+        mileage: form.mileage ? Number(form.mileage) : undefined,
+        bedrooms: form.bedrooms ? Number(form.bedrooms) : undefined,
         images: images.map(img => img.url),
         sellerId: me?.id || me?._id
       }
@@ -129,7 +134,7 @@ export default function PostAd() {
             <div>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Selected Category</span>
               <div className="font-black text-indigo-900 flex items-center gap-2">
-                <span className="text-xl">{CATEGORIES.find(c => c.name === category)?.icon}</span>
+                <img src={CATEGORIES.find(c => c.name === category)?.icon} alt={category} className="w-6 h-6 object-contain" />
                 {category}
               </div>
             </div>
