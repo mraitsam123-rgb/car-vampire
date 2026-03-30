@@ -119,16 +119,16 @@ export default function Chats() {
             <h2 className="text-xl font-black text-indigo-900 uppercase italic">Inbox</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {chats.length === 0 ? (
+            {chats?.length === 0 ? (
               <div className="p-10 text-center text-gray-400 font-bold text-sm uppercase">No messages yet</div>
             ) : (
-              chats.map(c => {
-                const isBuyer = String(c.buyerId?._id || c.buyerId) === String(me?.id || me?._id)
-                const other = isBuyer ? c.sellerId : c.buyerId
-                const isSelected = selectedChat?._id === c._id
+              chats?.map(c => {
+                const isBuyer = String(c?.buyerId?._id || c?.buyerId) === String(me?.id || me?._id)
+                const other = isBuyer ? c?.sellerId : c?.buyerId
+                const isSelected = selectedChat?._id === c?._id
                 return (
                   <button
-                    key={c._id}
+                    key={c?._id}
                     onClick={() => setSelectedChat(c)}
                     className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 border-b transition ${isSelected ? 'bg-indigo-50 border-l-4 border-l-indigo-900' : ''}`}
                   >
@@ -138,10 +138,10 @@ export default function Chats() {
                     <div className="text-left overflow-hidden flex-1">
                       <div className="flex justify-between items-start">
                         <div className="font-black text-sm truncate uppercase">{other?.name || 'User'}</div>
-                        <div className="text-[8px] font-bold text-gray-400 uppercase">{new Date(c.updatedAt || c.lastMessageAt || c.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</div>
+                        <div className="text-[8px] font-bold text-gray-400 uppercase">{new Date(c?.updatedAt || c?.lastMessageAt || c?.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</div>
                       </div>
-                      <div className="text-[10px] text-gray-500 truncate font-bold uppercase">{c.listingId?.title}</div>
-                      <div className="text-[10px] text-indigo-900 truncate font-medium mt-1 italic">{c.lastMessage || 'No messages yet'}</div>
+                      <div className="text-[10px] text-gray-500 truncate font-bold uppercase">{c?.listingId?.title}</div>
+                      <div className="text-[10px] text-indigo-900 truncate font-medium mt-1 italic">{c?.lastMessage || 'No messages yet'}</div>
                     </div>
                   </button>
                 )
@@ -158,8 +158,8 @@ export default function Chats() {
               <div className="p-3 border-b flex items-center justify-between bg-white sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-3">
                   {(() => {
-                    const isBuyer = String(selectedChat.buyerId?._id || selectedChat.buyerId) === String(me?.id || me?._id)
-                    const other = isBuyer ? selectedChat.sellerId : selectedChat.buyerId
+                    const isBuyer = String(selectedChat?.buyerId?._id || selectedChat?.buyerId) === String(me?.id || me?._id)
+                    const other = isBuyer ? selectedChat?.sellerId : selectedChat?.buyerId
                     return (
                       <>
                         <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-black text-indigo-900 border-2 border-white shadow-sm overflow-hidden">
@@ -167,14 +167,14 @@ export default function Chats() {
                         </div>
                         <div>
                           <div className="font-black text-sm uppercase italic">{other?.name || 'User'}</div>
-                          <Link to={`/listings/${selectedChat.listingId?._id}`} className="text-[10px] text-indigo-600 hover:underline font-black uppercase tracking-tight">View: {selectedChat.listingId?.title}</Link>
+                          <Link to={`/listings/${selectedChat?.listingId?._id}`} className="text-[10px] text-indigo-600 hover:underline font-black uppercase tracking-tight">View: {selectedChat?.listingId?.title}</Link>
                         </div>
                       </>
                     )
                   })()}
                 </div>
-                <Link to={`/listings?category=${selectedChat.listingId?.category}`} className="text-[10px] bg-gray-100 px-3 py-1.5 rounded-full font-black hover:bg-gray-200 transition uppercase tracking-widest">
-                  {selectedChat.listingId?.category}
+                <Link to={`/listings?category=${selectedChat?.listingId?.category}`} className="text-[10px] bg-gray-100 px-3 py-1.5 rounded-full font-black hover:bg-gray-200 transition uppercase tracking-widest">
+                  {selectedChat?.listingId?.category}
                 </Link>
               </div>
 

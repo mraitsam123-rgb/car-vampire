@@ -39,8 +39,8 @@ export default function Home() {
   }
 
   const getCategoryItems = (catName) => {
-    const filtered = items.filter(it => it.category === catName).slice(0, 4)
-    return filtered.length > 0 ? filtered : null
+    const filtered = items?.filter(it => it.category === catName).slice(0, 4)
+    return filtered?.length > 0 ? filtered : null
   }
   const cars = getCategoryItems("Vehicles")
   const property = getCategoryItems("Property")

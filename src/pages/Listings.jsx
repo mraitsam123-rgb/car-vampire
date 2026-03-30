@@ -95,13 +95,13 @@ export default function Listings() {
         <section className="col-span-12 md:col-span-9">
           <div className="bg-white border-2 border-gray-100 rounded-lg p-4 mb-6 flex items-center justify-between shadow-sm">
             <div className="text-sm font-bold text-gray-500">
-              {data.total} ads found {qs.city && `in ${qs.city}`}
+              {data?.total || 0} ads found {qs?.city && `in ${qs.city}`}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort by:</span>
               <select 
                 className="border-none bg-transparent font-bold text-indigo-900 focus:ring-0 cursor-pointer text-sm"
-                value={qs.sort || "newest"}
+                value={qs?.sort || "newest"}
                 onChange={(e) => updateFilter('sort', e.target.value)}
               >
                 <option value="newest">Newest</option>
@@ -117,7 +117,7 @@ export default function Listings() {
                 <div key={i} className="bg-gray-100 animate-pulse rounded-lg aspect-[4/5]"></div>
               ))}
             </div>
-          ) : data.items.length === 0 ? (
+          ) : !data?.items || data?.items?.length === 0 ? (
             <div className="bg-white border-2 border-dashed border-gray-200 rounded-xl p-20 text-center space-y-4">
               <div className="text-6xl">🔍</div>
               <h3 className="text-2xl font-extrabold text-indigo-900">Oops! No results found</h3>
@@ -131,20 +131,20 @@ export default function Listings() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {data.items.map(it => (
+              {data?.items?.map(it => (
                 <ListingCard key={it._id} it={it} />
               ))}
             </div>
           )}
           
           {/* Pagination */}
-          {data.pages > 1 && (
+          {data?.pages > 1 && (
             <div className="mt-12 flex justify-center gap-2">
               {Array.from({ length: data.pages }).map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => updateFilter('page', i + 1)}
-                  className={`w-10 h-10 font-bold rounded-lg transition ${Number(qs.page || 1) === i + 1 ? 'bg-indigo-900 text-white shadow-md' : 'bg-white text-indigo-900 hover:bg-indigo-50 border-2 border-gray-100'}`}
+                  className={`w-10 h-10 font-bold rounded-lg transition ${Number(qs?.page || 1) === i + 1 ? 'bg-indigo-900 text-white shadow-md' : 'bg-white text-indigo-900 hover:bg-indigo-50 border-2 border-gray-100'}`}
                 >
                   {i + 1}
                 </button>

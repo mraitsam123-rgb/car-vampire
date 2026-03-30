@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard.jsx"
 import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
+import ErrorBoundary from "./components/ErrorBoundary.jsx"
 
 import { io } from "socket.io-client"
 
@@ -114,8 +115,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
+    <ErrorBoundary>
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </ErrorBoundary>
   )
 }
