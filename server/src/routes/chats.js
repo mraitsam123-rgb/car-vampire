@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
   res.json(chats)
 })
 
-router.get("/:chatId/messages", authMiddleware, async (req, res) => {
+router.get("/:chatId/messages", async (req, res) => {
   const chat = await Chat.findById(req.params.chatId)
   if (!chat) return res.status(404).json({ error: "chat_not_found" })
   
@@ -38,7 +38,7 @@ router.get("/:chatId/messages", authMiddleware, async (req, res) => {
   res.json(messages)
 })
 
-router.post("/:chatId/messages", authMiddleware, async (req, res) => {
+router.post("/:chatId/messages", async (req, res) => {
   const chat = await Chat.findById(req.params.chatId)
   if (!chat) return res.status(404).json({ error: "chat_not_found" })
 
