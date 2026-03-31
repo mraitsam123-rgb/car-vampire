@@ -104,7 +104,7 @@ function AppContent() {
                   </button>
                   {showNotifs && (
                     <>
-                      <div className="fixed inset-0 bg-white/80 backdrop-blur-md z-[50]" onClick={() => setShowNotifs(false)}></div>
+                      <div className="fixed inset-0 z-[50]" onClick={() => setShowNotifs(false)}></div>
                       <div className="absolute right-0 mt-2 top-full z-[60]">
                         <NotificationDropdown 
                           notifications={notifications}

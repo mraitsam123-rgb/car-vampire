@@ -341,7 +341,7 @@ export default function ListingDetail() {
                     <span className="text-xl text-gray-300 group-hover:text-indigo-600 transition-colors">›</span>
                   </div>
                    <div className="flex gap-4 mt-1">
-                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Member since {item?.sellerId?.createdAt ? new Date(item.sellerId.createdAt).getFullYear() : "Original"}</p>
+                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Member since {item?.sellerId?.createdAt ? new Date(item.sellerId.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Original"}</p>
                      <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest border-l pl-4 border-gray-100">Active Ads: {sellerActiveAds}</p>
                    </div>
                 </div>
