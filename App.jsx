@@ -11,8 +11,6 @@ import Forgot from "./pages/Forgot.jsx"
 import Dashboard from "./pages/Dashboard.jsx"
 import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
-import Favorites from "./pages/Favorites.jsx"
-import Notifications from "./pages/Notifications.jsx"
 import About from "./pages/About.jsx"
 import Privacy from "./pages/Privacy.jsx"
 import Terms from "./pages/Terms.jsx"
@@ -144,9 +142,7 @@ function AppContent() {
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/chats" element={<Protected><Chats /></Protected>} />
           <Route path="/chats/:chatId" element={<Protected><Chats /></Protected>} />
-          <Route path="/profile/:id" element={<Protected><Profile /></Protected>} />
-          <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
-          <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+          <Route path="/profile/:id" element={<Profile />} />
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />

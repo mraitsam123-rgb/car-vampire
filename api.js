@@ -2,55 +2,179 @@ const API = import.meta.env.VITE_API_URL || ""
 
 export const authHeaders = (token) => ({ Authorization: `Bearer ${token}` })
 
-export const login = async (email, password) => {
-  const r = await fetch(`${API}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) })
-  if (!r.ok) throw new Error("login_failed")
+const request = async (url, options = {}) => {
+  const r = await fetch(url, options)
+  
+  if (r.status === 401) {
+    localStorage.removeItem("accessToken")
+    window.location.href = "/login"
+    throw new Error("unauthorized")
+  }
+  
+  if (!r.ok) {
+    const errorData = await r.json().catch(() => ({}))
+    throw new Error(errorData.error || "request_failed")
+  }
+  
   return r.json()
+}
+
+export const login = async (email, password) => {
+  return request(`${API}/api/auth/login`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json" }, 
+    body: JSON.stringify({ email, password }) 
+  })
 }
 
 export const register = async (payload) => {
-  const r = await fetch(`${API}/api/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-  if (!r.ok) throw new Error("register_failed")
-  return r.json()
+  return request(`${API}/api/auth/register`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json" }, 
+    body: JSON.stringify(payload) 
+  })
 }
 
 export const getMe = async (token) => {
-  const r = await fetch(`${API}/api/auth/me`, { headers: { ...authHeaders(token) } })
-  if (!r.ok) throw new Error("unauthorized")
-  return r.json()
+  return request(`${API}/api/auth/me`, {
+    headers: { ...authHeaders(token) }
+  })
+}
+
+export const updateMe = async (data) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/auth/me`, {
+    method: "PUT",
+    headers: { 
+      "Content-Type": "application/json",
+      ...authHeaders(token) 
+    },
+    body: JSON.stringify(data)
+  })
+}
+
+export const toggleFavorite = async (listingId) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/auth/toggle-favorite`, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      ...authHeaders(token) 
+    },
+    body: JSON.stringify({ listingId })
+  })
 }
 
 export const fetchListings = async (params = {}) => {
   const qs = new URLSearchParams(params).toString()
-  const r = await fetch(`${API}/api/listings?${qs}`)
-  return r.json()
+  try {
+    return await request(`${API}/api/listings?${qs}`)
+  } catch (err) {
+    return { items: [], total: 0, page: 1, pages: 1 }
+  }
 }
 
-export const fetchListing = async (id) => {
-  const r = await fetch(`${API}/api/listings/${id}`)
-  return r.json()
+export const getListing = async (id) => {
+  return request(`${API}/api/listings/${id}`)
 }
 
 export const createListing = async (token, payload) => {
-  const r = await fetch(`${API}/api/listings`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify(payload) })
-  if (!r.ok) throw new Error("create_failed")
-  return r.json()
+  return request(`${API}/api/listings`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json", ...authHeaders(token) }, 
+    body: JSON.stringify(payload) 
+  })
 }
 
 export const uploadImages = async (token, files) => {
   const fd = new FormData()
   Array.from(files).forEach(f => fd.append("images", f))
-  const r = await fetch(`${API}/api/listings/upload`, { method: "POST", headers: { ...authHeaders(token) }, body: fd })
-  if (!r.ok) throw new Error("upload_failed")
-  return r.json()
+  return request(`${API}/api/listings/upload`, { 
+    method: "POST", 
+    headers: { ...authHeaders(token) }, 
+    body: fd 
+  })
 }
 
-export const toggleFavorite = async (token, listingId) => {
-  const r = await fetch(`${API}/api/favorites/${listingId}`, { method: "POST", headers: { ...authHeaders(token) } })
-  return r.json()
+export const getReviews = async (id) => {
+  try {
+    return await request(`${API}/api/listings/${id}/reviews`)
+  } catch (err) {
+    return []
+  }
 }
 
-export const getFavorites = async (token) => {
-  const r = await fetch(`${API}/api/favorites`, { headers: { ...authHeaders(token) } })
-  return r.json()
+export const addReview = async (id, payload) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/listings/${id}/reviews`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json", ...authHeaders(token) }, 
+    body: JSON.stringify(payload) 
+  })
+}
+
+export const getChats = async () => {
+  const token = localStorage.getItem("accessToken")
+  try {
+    return await request(`${API}/api/chats`, {
+      headers: { ...authHeaders(token) }
+    })
+  } catch (err) {
+    return []
+  }
+}
+
+export const getMessages = async (chatId) => {
+  const token = localStorage.getItem("accessToken")
+  try {
+    return await request(`${API}/api/chats/${chatId}/messages`, {
+      headers: { ...authHeaders(token) }
+    })
+  } catch (err) {
+    return []
+  }
+}
+
+export const startChat = async (payload) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/chats/start`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json", ...authHeaders(token) }, 
+    body: JSON.stringify(payload) 
+  })
+}
+
+export const deleteListing = async (id) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/listings/${id}`, { 
+    method: "DELETE", 
+    headers: { ...authHeaders(token) } 
+  })
+}
+
+export const getNotifications = async () => {
+  const token = localStorage.getItem("accessToken")
+  try {
+    return await request(`${API}/api/notifications`, {
+      headers: { ...authHeaders(token) }
+    })
+  } catch (err) {
+    return []
+  }
+}
+
+export const markNotificationAsRead = async (id) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/notifications/${id}/read`, {
+    method: "PUT",
+    headers: { ...authHeaders(token) }
+  })
+}
+
+export const markAllNotificationsAsRead = async () => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/notifications/read-all`, {
+    method: "PUT",
+    headers: { ...authHeaders(token) }
+  })
 }

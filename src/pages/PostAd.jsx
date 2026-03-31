@@ -25,8 +25,7 @@ const CAR_MAKES = {
   Hyundai: ["Elantra", "Tucson", "Sonata", "Santa Fe"],
   Kia: ["Sportage", "Picanto", "Stonic", "Sorento"],
   Changan: ["Alsvin", "Karvaan"],
-  MG: ["HS", "ZS", "MG5"],
-  Other: ["I did not find my variant"]
+  MG: ["HS", "ZS", "MG5"]
 }
 
 const MOBILE_BRANDS = ["Apple", "Samsung", "Vivo", "Oppo", "Infinix", "Xiaomi", "Realme", "Tecno", "Google", "Huawei"]
@@ -39,7 +38,7 @@ export default function PostAd() {
   const [category, setCategory] = useState("")
   const [form, setForm] = useState({
     title: "", price: "", city: "", description: "",
-    make: "", model: "", customMake: "", customModel: "", year: "", mileage: "", 
+    make: "", model: "", year: "", mileage: "", 
     fuelType: "Petrol", transmission: "Manual", condition: "Used",
     brand: "", storage: "128GB",
     propertyType: "House", area: "", bedrooms: "1",
@@ -76,8 +75,6 @@ export default function PostAd() {
     try {
       const payload = {
         ...form,
-        make: form.make === "Other" ? form.customMake : form.make,
-        model: form.model === "I did not find my variant" ? form.customModel : form.model,
         category,
         price: Number(form.price),
         year: form.year ? Number(form.year) : undefined,
@@ -176,35 +173,17 @@ export default function PostAd() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Make *</label>
-                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.make} onChange={e=>setForm({...form, make: e.target.value, model: "", customMake: ""})}>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.make} onChange={e=>setForm({...form, make: e.target.value, model: ""})}>
                       <option value="">Select Make</option>
                       {Object.keys(CAR_MAKES).map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
-                    {form.make === "Other" && (
-                      <input 
-                        required 
-                        placeholder="Enter car company" 
-                        className="w-full mt-2 border-2 border-gray-100 rounded-lg px-4 py-2 focus:border-indigo-900 focus:outline-none transition text-sm"
-                        value={form.customMake}
-                        onChange={e => setForm({...form, customMake: e.target.value})}
-                      />
-                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Model *</label>
-                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value, customModel: ""})} disabled={!form.make}>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value})} disabled={!form.make}>
                       <option value="">Select Model</option>
                       {form.make && CAR_MAKES[form.make].map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
-                    {form.model === "I did not find my variant" && (
-                      <input 
-                        required 
-                        placeholder="Enter model/variant" 
-                        className="w-full mt-2 border-2 border-gray-100 rounded-lg px-4 py-2 focus:border-indigo-900 focus:outline-none transition text-sm"
-                        value={form.customModel}
-                        onChange={e => setForm({...form, customModel: e.target.value})}
-                      />
-                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">

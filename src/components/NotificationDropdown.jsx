@@ -13,7 +13,7 @@ const formatTime = (date) => {
 
 export default function NotificationDropdown({ notifications, onMarkAsRead, onMarkAllRead, onClose }) {
   return (
-    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-[1000] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
       <div className="p-4 border-b flex justify-between items-center bg-gray-50/50">
         <h3 className="font-black text-indigo-900 uppercase italic text-sm">Notifications</h3>
         <button 
