@@ -79,7 +79,7 @@ function AppContent() {
   return (
     <div className="min-h-screen flex flex-col">
       <Toaster position="top-right" />
-      <header className="sticky top-0 z-10 bg-white shadow">
+      <header className="sticky top-0 z-50 bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 group">
             <img src="/logos/Colorful QuickBuy logo design.png" className="w-10 h-10 group-hover:rotate-12 transition-transform duration-300" alt="QuickBuy Logo" />
