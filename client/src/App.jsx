@@ -38,7 +38,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!me) return
-    
+
     // Initial fetch
     getNotifications().then(setNotifications)
 
@@ -91,7 +91,7 @@ function AppContent() {
                 <Link to="/favorites" className="text-2xl hover:text-red-500 transition" title="Favorites">❤️</Link>
                 <Link to="/chats" className="text-2xl hover:text-indigo-600 transition" title="Messages">💬</Link>
                 <div>
-                  <button 
+                  <button
                     onClick={() => setShowNotifs(!showNotifs)}
                     className="text-2xl hover:text-indigo-600 transition relative z-[60]"
                   >
@@ -106,7 +106,7 @@ function AppContent() {
                     <>
                       <div className="fixed inset-0 z-[50]" onClick={() => setShowNotifs(false)}></div>
                       <div className="absolute right-0 mt-2 top-full z-[60]">
-                        <NotificationDropdown 
+                        <NotificationDropdown
                           notifications={notifications}
                           onMarkAsRead={handleMarkRead}
                           onMarkAllRead={handleMarkAllRead}
