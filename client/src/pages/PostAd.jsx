@@ -38,7 +38,7 @@ export default function PostAd() {
   const [category, setCategory] = useState("")
   const [form, setForm] = useState({
     title: "", price: "", city: "", location: "", description: "",
-    make: "", model: "", customModel: "", year: "", mileage: "", 
+    make: "", model: "", customModel: "", year: "", mileage: "", engine: "",
     fuelType: "Petrol", transmission: "Manual", condition: "Used",
     brand: "", storage: "128GB",
     propertyType: "House", area: "", bedrooms: "1",
@@ -239,9 +239,15 @@ export default function PostAd() {
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mileage (KM) *</label>
-                  <input required type="number" placeholder="50000" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.mileage} onChange={e=>setForm({...form, mileage: e.target.value})} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mileage (KM) *</label>
+                    <input required type="number" placeholder="50000" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.mileage} onChange={e=>setForm({...form, mileage: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Engine Capacity *</label>
+                    <input required type="text" placeholder="1300 cc" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.engine || ""} onChange={e=>setForm({...form, engine: e.target.value})} />
+                  </div>
                 </div>
               </div>
             )}

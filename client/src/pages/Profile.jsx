@@ -122,9 +122,6 @@ export default function Profile() {
               <div className="pb-2 flex-1 flex flex-col justify-end">
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none">{formData.name || profileUser?.name || "User Profile"}</h1>
-                  <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded-full font-black tracking-widest uppercase border border-yellow-200">
-                    Member since {profileUser?.createdAt ? new Date(profileUser.createdAt).toLocaleDateString('en-US', {month:'long', year:'numeric'}) : "May 2026"}
-                  </span>
                 </div>
                 <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">
                   Total Ads: <span className="text-indigo-900">{userAds.length}</span> • Active Ads: <span className="text-green-600">{activeAdsCount}</span>

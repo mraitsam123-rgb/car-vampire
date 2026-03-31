@@ -39,7 +39,7 @@ export default function EditAd() {
   const [category, setCategory] = useState("")
   const [form, setForm] = useState({
     title: "", price: "", city: "", location: "", description: "",
-    make: "", model: "", customModel: "", year: "", mileage: "", 
+    make: "", model: "", customModel: "", year: "", mileage: "", engine: "",
     fuelType: "Petrol", transmission: "Manual", condition: "Used",
     brand: "", storage: "128GB",
     propertyType: "House", area: "", bedrooms: "1",
@@ -63,7 +63,7 @@ export default function EditAd() {
         setCategory(ad.category)
         setForm({
           title: ad.title || "", price: ad.price || "", city: ad.city || "", location: ad.location || "", description: ad.description || "",
-          make: ad.make || "", model: CAR_MAKES[ad.make]?.includes(ad.model) ? ad.model : "Other", customModel: !CAR_MAKES[ad.make]?.includes(ad.model) ? ad.model : "", year: ad.year || "", mileage: ad.mileage || "", 
+          make: ad.make || "", model: CAR_MAKES[ad.make]?.includes(ad.model) ? ad.model : "Other", customModel: !CAR_MAKES[ad.make]?.includes(ad.model) ? ad.model : "", year: ad.year || "", mileage: ad.mileage || "", engine: ad.engine || "", 
           fuelType: ad.fuelType || "Petrol", transmission: ad.transmission || "Manual", condition: ad.condition || "Used",
           brand: ad.brand || "", storage: ad.storage || "128GB",
           propertyType: ad.propertyType || "House", area: ad.area || "", bedrooms: ad.bedrooms || "1",
@@ -269,9 +269,15 @@ export default function EditAd() {
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mileage (KM) *</label>
-                  <input required type="number" placeholder="50000" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.mileage} onChange={e=>setForm({...form, mileage: e.target.value})} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mileage (KM) *</label>
+                    <input required type="number" placeholder="50000" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.mileage} onChange={e=>setForm({...form, mileage: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Engine Capacity *</label>
+                    <input required type="text" placeholder="1300 cc" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.engine || ""} onChange={e=>setForm({...form, engine: e.target.value})} />
+                  </div>
                 </div>
               </div>
             )}

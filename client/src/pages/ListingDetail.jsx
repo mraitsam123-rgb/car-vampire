@@ -266,7 +266,7 @@ export default function ListingDetail() {
                 <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Condition</span><span className="font-black text-sm text-indigo-900">{item?.condition || "Used"}</span></div>
                 {item?.category === "Vehicles" && (
                   <>
-                    <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Engine</span><span className="font-black text-sm text-indigo-900">{item?.engine || "1300 cc"}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Engine</span><span className="font-black text-sm text-indigo-900">{item?.engine || "-"}</span></div>
                     <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-gray-400 uppercase">Registered In</span><span className="font-black text-sm text-indigo-900">{item?.registeredCity || item?.city}</span></div>
                   </>
                 )}
@@ -393,8 +393,7 @@ export default function ListingDetail() {
                     <span className="text-xl text-gray-300 group-hover:text-indigo-600 transition-colors">›</span>
                   </div>
                    <div className="flex gap-4 mt-1">
-                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Member since {item?.sellerId?.createdAt ? new Date(item.sellerId.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "May 2026"}</p>
-                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest border-l pl-4 border-gray-100">Active Ads: {sellerActiveAds}</p>
+                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest pl-1 border-gray-100">Active Ads: {sellerActiveAds}</p>
                    </div>
                 </div>
               </div>

@@ -75,8 +75,7 @@ export default function Dashboard() {
             <div className="w-24 h-24 bg-indigo-100 rounded-full mx-auto flex items-center justify-center text-4xl font-black text-indigo-900 mb-4 border-4 border-white shadow-md overflow-hidden">
               {me?.avatar ? <img src={me.avatar} className="w-full h-full object-cover" /> : me?.name?.[0]}
             </div>
-            <h2 className="text-2xl font-black text-indigo-900 uppercase tracking-tight italic">{me?.name}</h2>
-            <p className="text-gray-500 text-sm mb-6 font-bold uppercase tracking-widest">Member since {me?.createdAt ? new Date(me.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "May 2026"}</p>
+            <h2 className="text-2xl font-black text-indigo-900 uppercase tracking-tight italic mb-6">{me?.name}</h2>
             <Link to={`/profile/${me?.id || me?._id}`} className="block w-full py-3 border-2 border-indigo-900 text-indigo-900 font-bold rounded-lg hover:bg-indigo-50 transition shadow-sm">View & Edit Profile</Link>
           </div>
 
