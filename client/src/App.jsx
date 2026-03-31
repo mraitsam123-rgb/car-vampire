@@ -17,6 +17,7 @@ import Terms from "./pages/Terms.jsx"
 import Favorites from "./pages/Favorites.jsx"
 import Notifications from "./pages/Notifications.jsx"
 import Report from "./pages/Report.jsx"
+import EditAd from "./pages/EditAd.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
 import ErrorBoundary from "./components/ErrorBoundary.jsx"
 import NotificationDropdown from "./components/NotificationDropdown.jsx"
@@ -145,6 +146,7 @@ function AppContent() {
           <Route path="/listings/:id" element={<ListingDetail />} />
           <Route path="/cars/:city/:make/:model/:id" element={<ListingDetail />} />
           <Route path="/post-ad" element={<Protected><PostAd /></Protected>} />
+          <Route path="/edit-ad/:id" element={<Protected><EditAd /></Protected>} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot" element={<Forgot />} />

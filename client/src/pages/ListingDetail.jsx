@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
-import { getListing, toggleFavorite, fetchListings, getReviews, addReview, startChat } from "../lib/api.js"
+import { getListing, toggleFavorite, fetchListings, getReviews, addReview, startChat, updateListing, deleteListing } from "../lib/api.js"
 import { useUser } from "../context/UserContext.jsx"
 import { toast } from "react-hot-toast"
 import ListingCard from "../components/ListingCard.jsx"
@@ -107,6 +107,29 @@ export default function ListingDetail() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this ad?")) return
+    try {
+      await deleteListing(item._id)
+      toast.success("Ad permanently deleted")
+      navigate("/dashboard")
+    } catch (err) {
+      toast.error("Failed to delete ad")
+    }
+  }
+
+  const handleMarkSold = async () => {
+    if (!window.confirm("Are you sure you want to mark this ad as Sold? It will be hidden from public listings.")) return
+    try {
+      // update backend
+      await updateListing(item._id, { status: "sold" })
+      setItem(prev => ({ ...prev, status: "sold" }))
+      toast.success("Ad marked as Sold!")
+    } catch (err) {
+      toast.error("Failed to mark ad as sold")
+    }
+  }
+
   const formatPrice = (price) => {
     if (!price) return "Rs 0"
     if (price >= 10000000) { // Crore
@@ -127,6 +150,8 @@ export default function ListingDetail() {
   )
 
   const images = item?.images?.length > 0 ? item.images : [{ url: "https://via.placeholder.com/800x600?text=No+Image" }]
+  const isOwner = me && (me.id === item?.sellerId?._id || me._id === item?.sellerId?._id);
+  const isSold = item?.status === "sold";
 
   return (
     <div className="bg-[#f7f8f8] min-h-screen pb-12">
@@ -171,14 +196,19 @@ export default function ListingDetail() {
                     <span className="text-[10px] font-black text-yellow-700">{item?.rating?.toFixed(1) || "0.0"}</span>
                     <span className="text-[8px] font-bold text-yellow-400">({item?.reviewCount || 0})</span>
                   </div>
-                  {daysLeft !== null && daysLeft <= 10 && (
+                  {daysLeft !== null && daysLeft <= 10 && !isSold && (
                     <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded-full uppercase flex items-center gap-1">
                       ⚠️ Expiring in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
                     </span>
                   )}
-                  {daysLeft !== null && daysLeft > 10 && (
+                  {daysLeft !== null && daysLeft > 10 && !isSold && (
                     <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded-full uppercase border border-green-200 shadow-sm flex items-center gap-1">
                       🟢 {daysLeft} Days Remaining
+                    </span>
+                  )}
+                  {isSold && (
+                    <span className="bg-red-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest flex items-center gap-1">
+                      🔴 SOLD
                     </span>
                   )}
                 </div>
@@ -327,8 +357,30 @@ export default function ListingDetail() {
           )}
         </div>
 
-        {/* Right Column: Seller Info */}
+        {/* Right Column: Seller Info & Owner Controls */}
         <div className="col-span-12 lg:col-span-4 space-y-4">
+          
+          {isOwner && (
+            <div className="bg-indigo-50 border-2 border-indigo-100 rounded-xl p-6 shadow-sm space-y-4">
+              <h4 className="font-black text-indigo-900 uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+                <span>🛡️</span> Owner Controls
+              </h4>
+              <div className="flex gap-2">
+                <button onClick={() => navigate(`/edit-ad/${item._id}`)} className="flex-1 bg-white border border-indigo-200 text-indigo-900 font-bold py-3 rounded-lg hover:bg-indigo-100 transition shadow-sm text-xs uppercase tracking-widest text-center">
+                  ✏️ Edit
+                </button>
+                <button onClick={handleDelete} className="flex-1 bg-white border border-red-200 text-red-600 font-bold py-3 rounded-lg hover:bg-red-50 transition shadow-sm text-xs uppercase tracking-widest text-center">
+                  🗑️ Delete
+                </button>
+              </div>
+              {!isSold && (
+                <button onClick={handleMarkSold} className="w-full bg-indigo-900 text-white font-black py-4 rounded-xl hover:bg-indigo-800 transition shadow-md text-sm uppercase tracking-widest text-center">
+                  ✅ Mark as Sold
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="bg-white border rounded p-6 shadow-sm">
             <Link to={`/profile/${item?.sellerId?._id}`} className="flex items-center justify-between mb-6 group">
               <div className="flex items-center gap-4">
@@ -348,36 +400,38 @@ export default function ListingDetail() {
               </div>
             </Link>
 
-            <div className="space-y-3">
-              {/* Phone Button */}
-              {item?.phone || item?.sellerId?.phone ? (
+            {!isSold && (
+              <div className="space-y-3">
+                {/* Phone Button */}
+                {item?.phone || item?.sellerId?.phone ? (
+                  <button 
+                    onClick={() => setShowPhone(!showPhone)}
+                    className="w-full flex items-center justify-center gap-3 py-4 bg-[#002f34] text-white font-black rounded hover:bg-[#003d44] transition-all shadow-md uppercase tracking-tight text-sm"
+                  >
+                    <span className="text-lg">📞</span> 
+                    {showPhone ? `+92 ${item?.phone || item?.sellerId?.phone}` : "Show Phone Number"}
+                  </button>
+                ) : null}
+                
+                {/* Chat Button */}
                 <button 
-                  onClick={() => setShowPhone(!showPhone)}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-[#002f34] text-white font-black rounded hover:bg-[#003d44] transition-all shadow-md uppercase tracking-tight text-sm"
+                  onClick={handleStartChat}
+                  className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#002f34] text-[#002f34] font-black rounded hover:bg-gray-50 transition-all uppercase tracking-tight text-sm"
                 >
-                  <span className="text-lg">📞</span> 
-                  {showPhone ? `+92 ${item?.phone || item?.sellerId?.phone}` : "Show Phone Number"}
+                  <span className="text-lg">💬</span> Chat
                 </button>
-              ) : null}
-              
-              {/* Chat Button */}
-              <button 
-                onClick={handleStartChat}
-                className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#002f34] text-[#002f34] font-black rounded hover:bg-gray-50 transition-all uppercase tracking-tight text-sm"
-              >
-                <span className="text-lg">💬</span> Chat
-              </button>
 
-              {/* WhatsApp Button */}
-              {item.isWhatsApp && (
-                <button 
-                  onClick={handleWhatsApp}
-                  className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#25D366] text-[#25D366] font-black rounded hover:bg-green-50 transition-all uppercase tracking-tight text-sm"
-                >
-                  <span className="text-lg">💬</span> WhatsApp
-                </button>
-              )}
-            </div>
+                {/* WhatsApp Button */}
+                {item.isWhatsApp && (
+                  <button 
+                    onClick={handleWhatsApp}
+                    className="w-full flex items-center justify-center gap-3 py-4 border-2 border-[#25D366] text-[#25D366] font-black rounded hover:bg-green-50 transition-all uppercase tracking-tight text-sm"
+                  >
+                    <span className="text-lg">💬</span> WhatsApp
+                  </button>
+                )}
+              </div>
+            )}
             
             <div className="mt-6 pt-6 border-t flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
               <span>AD ID: QB-{item._id?.slice(-6).toUpperCase()}</span>

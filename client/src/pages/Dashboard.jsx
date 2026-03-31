@@ -8,7 +8,8 @@ import { toast } from "react-hot-toast"
 export default function Dashboard() {
   const { me, logout } = useUser()
   const [favorites, setFavorites] = useState([])
-  const [myAds, setMyAds] = useState([])
+  const [activeAds, setActiveAds] = useState([])
+  const [soldAds, setSoldAds] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -17,9 +18,13 @@ export default function Dashboard() {
     const loadData = async () => {
       try {
         setLoading(true)
-        // Fetch my ads
-        const myAdsRes = await fetchListings({ sellerId: me?.id || me?._id, limit: 50 })
-        setMyAds(myAdsRes?.items || [])
+        // Fetch my active and sold ads
+        const [activeRes, soldRes] = await Promise.all([
+          fetchListings({ sellerId: me?.id || me?._id, limit: 50 }),
+          fetchListings({ sellerId: me?.id || me?._id, status: "sold", limit: 50 })
+        ])
+        setActiveAds(activeRes?.items || [])
+        setSoldAds(soldRes?.items || [])
 
         // Fetch favorite listings if any
         if (me?.favorites && Array.isArray(me?.favorites) && me?.favorites?.length > 0) {
@@ -46,7 +51,8 @@ export default function Dashboard() {
     if (!window.confirm("Are you sure you want to delete this ad?")) return
     try {
       await deleteListing(id)
-      setMyAds(myAds.filter(it => it._id !== id))
+      setActiveAds(activeAds.filter(it => it._id !== id))
+      setSoldAds(soldAds.filter(it => it._id !== id))
       toast.success("Ad deleted successfully")
     } catch (err) {
       toast.error("Failed to delete ad")
@@ -93,23 +99,23 @@ export default function Dashboard() {
         {/* Main Content */}
         <main className="col-span-12 lg:col-span-8 space-y-8">
           
-          {/* My Ads Section */}
+          {/* Active Ads Section */}
           <section className="bg-white border-2 border-gray-100 rounded-xl p-8 shadow-sm">
             <div className="flex items-center justify-between mb-8 border-b-2 border-gray-50 pb-4">
-              <h3 className="text-xl font-black text-indigo-900 uppercase italic">My Ads ({myAds?.length || 0})</h3>
+              <h3 className="text-xl font-black text-indigo-900 uppercase italic">Active Ads ({activeAds?.length || 0})</h3>
               <Link to="/post-ad" className="text-xs font-black text-indigo-600 hover:underline uppercase tracking-widest">Post Another Ad</Link>
             </div>
             
             <div className="space-y-4">
-              {myAds?.length === 0 ? (
+              {activeAds?.length === 0 ? (
                 <div className="py-12 text-center">
                   <div className="text-6xl mb-4">📉</div>
-                  <p className="text-gray-400 font-bold uppercase tracking-tight">You haven't posted any ads yet.</p>
+                  <p className="text-gray-400 font-bold uppercase tracking-tight">You don't have any active ads right now.</p>
                   <Link to="/post-ad" className="inline-block mt-4 text-indigo-600 font-black uppercase text-xs hover:underline">Click here to start selling</Link>
                 </div>
               ) : (
-                myAds?.map(it => (
-                  <div key={it._id} className="flex items-center gap-4 p-4 border-2 border-gray-50 rounded-xl hover:border-indigo-100 transition group">
+                activeAds?.map(it => (
+                  <div key={it._id} className="flex items-center gap-4 p-4 border-2 border-gray-50 rounded-xl hover:border-indigo-100 transition group relative">
                     <div className="w-24 h-24 rounded-lg bg-gray-50 overflow-hidden shrink-0">
                       <img 
                         src={typeof it.images?.[0] === 'string' ? it.images[0] : it.images?.[0]?.url || "https://via.placeholder.com/150"} 
@@ -126,8 +132,48 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 shrink-0">
-                      <Link to={`/listings/${it._id}`} className="px-4 py-1.5 bg-gray-100 text-indigo-900 text-xs font-bold rounded-full hover:bg-indigo-100 transition text-center">View</Link>
-                      <button onClick={() => handleDelete(it._id)} className="px-4 py-1.5 text-red-600 text-xs font-bold rounded-full hover:bg-red-50 transition border border-red-100">Delete</button>
+                      <Link to={`/listings/${it._id}`} className="px-4 py-1.5 bg-gray-100 text-indigo-900 text-xs font-bold rounded-full hover:bg-indigo-100 transition text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">View</Link>
+                      <button onClick={() => handleDelete(it._id)} className="px-4 py-1.5 text-red-600 text-xs font-bold rounded-full hover:bg-red-50 transition border border-red-100 focus:outline-none focus:ring-2 focus:ring-red-500">Delete</button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* Sold Ads Section */}
+          <section className="bg-white border-2 border-gray-100 rounded-xl p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-8 border-b-2 border-gray-50 pb-4">
+              <h3 className="text-xl font-black text-indigo-900 uppercase italic">Sold Ads ({soldAds?.length || 0})</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {soldAds?.length === 0 ? (
+                <div className="py-6 text-center">
+                  <p className="text-gray-400 font-bold uppercase tracking-tight text-xs">No records of sold ads.</p>
+                </div>
+              ) : (
+                soldAds?.map(it => (
+                  <div key={it._id} className="flex items-center gap-4 p-4 border-2 border-gray-50 rounded-xl bg-gray-50 opacity-90 transition group relative">
+                    <div className="w-24 h-24 rounded-lg bg-gray-200 overflow-hidden shrink-0 relative">
+                      <img 
+                        src={typeof it.images?.[0] === 'string' ? it.images[0] : it.images?.[0]?.url || "https://via.placeholder.com/150"} 
+                        className="w-full h-full object-cover grayscale mix-blend-multiply" 
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-sm uppercase tracking-widest -rotate-12">SOLD</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-gray-500 truncate uppercase tracking-tight line-through decoration-2 decoration-red-400">{it.title}</h4>
+                      <p className="text-gray-400 font-black line-through text-sm">Rs {it.price?.toLocaleString()}</p>
+                      <div className="flex items-center gap-2 mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <span>{it.createdAt ? new Date(it.createdAt).toLocaleDateString() : ""}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <Link to={`/listings/${it._id}`} className="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-full hover:bg-gray-300 transition text-center focus:outline-none">View Details</Link>
+                      <button onClick={() => handleDelete(it._id)} className="px-4 py-1.5 text-red-600 text-xs font-bold rounded-full hover:bg-red-50 transition border border-red-100 focus:outline-none">Delete Record</button>
                     </div>
                   </div>
                 ))

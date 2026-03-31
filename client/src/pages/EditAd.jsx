@@ -1,6 +1,6 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { createListing, uploadImages } from "../lib/api.js"
+import { useState, useEffect } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { updateListing, uploadImages, getListing } from "../lib/api.js"
 import { toast } from "react-hot-toast"
 import { useUser } from "../context/UserContext.jsx"
 
@@ -32,7 +32,8 @@ const MOBILE_BRANDS = ["Apple", "Samsung", "Vivo", "Oppo", "Infinix", "Xiaomi", 
 
 const PROPERTY_TYPES = ["House", "Flat", "Plot", "Commercial", "Other"]
 
-export default function PostAd() {
+export default function EditAd() {
+  const { id } = useParams()
   const { me } = useUser()
   const [step, setStep] = useState(1)
   const [category, setCategory] = useState("")
@@ -48,6 +49,35 @@ export default function PostAd() {
   const [uploading, setUploading] = useState(false)
   const navigate = useNavigate()
   const token = localStorage.getItem("accessToken")
+
+  useEffect(() => {
+    if (!id) return
+    const fetchAd = async () => {
+      try {
+        const ad = await getListing(id)
+        if (ad.sellerId._id !== (me?.id || me?._id)) {
+          toast.error("You are not authorized to edit this ad")
+          navigate("/dashboard")
+          return
+        }
+        setCategory(ad.category)
+        setForm({
+          title: ad.title || "", price: ad.price || "", city: ad.city || "", location: ad.location || "", description: ad.description || "",
+          make: ad.make || "", model: CAR_MAKES[ad.make]?.includes(ad.model) ? ad.model : "Other", customModel: !CAR_MAKES[ad.make]?.includes(ad.model) ? ad.model : "", year: ad.year || "", mileage: ad.mileage || "", 
+          fuelType: ad.fuelType || "Petrol", transmission: ad.transmission || "Manual", condition: ad.condition || "Used",
+          brand: ad.brand || "", storage: ad.storage || "128GB",
+          propertyType: ad.propertyType || "House", area: ad.area || "", bedrooms: ad.bedrooms || "1",
+          phone: ad.phone || "", showPhone: ad.showWhatsApp !== undefined ? ad.showWhatsApp : true, isWhatsApp: ad.isWhatsApp !== undefined ? ad.isWhatsApp : true
+        })
+        setImages(ad.images || [])
+        setStep(2) // Jump straight to edit details
+      } catch (err) {
+        toast.error("Failed to load ad details")
+        navigate(-1)
+      }
+    }
+    if (me) fetchAd()
+  }, [id, me, navigate])
 
   const handleUpload = async (e) => {
     setUploading(true)
@@ -84,9 +114,9 @@ export default function PostAd() {
         images: images,
         sellerId: me?.id || me?._id
       }
-      const data = await createListing(token, payload)
+      const data = await updateListing(id, payload)
       if (data?._id) {
-        toast.success("Ad posted successfully!")
+        toast.success("Ad updated successfully!")
         navigate(`/listings/${data._id}`)
       }
     } catch (err) {
@@ -122,7 +152,7 @@ export default function PostAd() {
   if (step === 1) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold text-center mb-8 uppercase">Post Your Ad</h1>
+        <h1 className="text-2xl font-bold text-center mb-8 uppercase">Edit Your Ad</h1>
         <div className="bg-white border-2 border-gray-100 rounded-xl p-8 shadow-sm">
           <h2 className="font-black text-indigo-900 mb-8 uppercase tracking-widest text-sm">CHOOSE A CATEGORY</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -148,7 +178,7 @@ export default function PostAd() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <div className="flex items-center gap-4 mb-10">
         <button onClick={() => setStep(1)} className="text-2xl hover:text-indigo-600 transition">←</button>
-        <h1 className="text-2xl font-black text-indigo-900 uppercase italic">Include some details</h1>
+        <h1 className="text-2xl font-black text-indigo-900 uppercase italic">Edit your details</h1>
       </div>
 
       <div className="grid grid-cols-12 gap-8">
@@ -388,7 +418,7 @@ export default function PostAd() {
             disabled={uploading}
             className="w-full py-5 bg-[#002f34] text-white font-black rounded hover:bg-[#003d44] transition-all shadow-xl uppercase tracking-widest text-sm disabled:opacity-50"
           >
-            {uploading ? "Uploading Photos..." : "Post Now"}
+            {uploading ? "Updating Photos..." : "Update Ad"}
           </button>
         </form>
 

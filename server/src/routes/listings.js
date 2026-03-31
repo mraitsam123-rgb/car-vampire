@@ -135,11 +135,12 @@ router.get("/", async (req, res) => {
     maxYear,
     minMileage,
     maxMileage,
+    status,
     sort = "newest",
     page = 1,
     limit = 20
   } = req.query
-  const filter = { status: "active" }
+  const filter = { status: status || "active" }
   if (q) {
     const regex = new RegExp(q, "i")
     filter.$or = [
@@ -190,6 +191,13 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   const listing = await Listing.findById(req.params.id)
   if (!listing) return res.status(404).json({ error: "not_found" })
   if (String(listing.sellerId) !== String(req.user._id)) return res.status(403).json({ error: "forbidden" })
+  
+  if (listing.images && listing.images.length > 0) {
+    await Promise.allSettled(
+      listing.images.map(img => img.fileId ? deleteRemote(img.fileId) : Promise.resolve())
+    )
+  }
+  
   await listing.deleteOne()
   res.json({ ok: true })
 })

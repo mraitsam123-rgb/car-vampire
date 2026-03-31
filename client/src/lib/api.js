@@ -144,6 +144,15 @@ export const startChat = async (payload) => {
   })
 }
 
+export const updateListing = async (id, payload) => {
+  const token = localStorage.getItem("accessToken")
+  return request(`${API}/api/listings/${id}`, { 
+    method: "PUT", 
+    headers: { "Content-Type": "application/json", ...authHeaders(token) }, 
+    body: JSON.stringify(payload) 
+  })
+}
+
 export const deleteListing = async (id) => {
   const token = localStorage.getItem("accessToken")
   return request(`${API}/api/listings/${id}`, { 
