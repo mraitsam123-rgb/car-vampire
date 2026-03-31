@@ -11,6 +11,11 @@ import Forgot from "./pages/Forgot.jsx"
 import Dashboard from "./pages/Dashboard.jsx"
 import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
+import Favorites from "./pages/Favorites.jsx"
+import Notifications from "./pages/Notifications.jsx"
+import About from "./pages/About.jsx"
+import Privacy from "./pages/Privacy.jsx"
+import Terms from "./pages/Terms.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
 import ErrorBoundary from "./components/ErrorBoundary.jsx"
 import NotificationDropdown from "./components/NotificationDropdown.jsx"
@@ -75,7 +80,10 @@ function AppContent() {
       <Toaster position="top-right" />
       <header className="sticky top-0 z-10 bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <Link to="/" className="text-2xl font-bold text-indigo-900 shrink-0 hidden md:block">OLX</Link>
+          <Link to="/" className="flex items-center gap-2 group">
+            <img src="/logos/Colorful QuickBuy logo design.png" className="w-10 h-10 group-hover:rotate-12 transition-transform duration-300" alt="QuickBuy Logo" />
+            <span className="text-3xl font-black bg-gradient-to-r from-indigo-900 via-indigo-600 to-indigo-900 bg-clip-text text-transparent uppercase italic tracking-tighter">QuickBuy</span>
+          </Link>
           <div className="ml-auto flex items-center gap-6">
             {me && (
               <>
@@ -136,11 +144,48 @@ function AppContent() {
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/chats" element={<Protected><Chats /></Protected>} />
           <Route path="/chats/:chatId" element={<Protected><Chats /></Protected>} />
-          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/profile/:id" element={<Protected><Profile /></Protected>} />
+          <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
+          <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </main>
       <footer className="bg-white border-t">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-sm text-gray-500">© Car Garage</div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <Link to="/" className="flex items-center gap-2">
+              <img src="/logos/Colorful QuickBuy logo design.png" className="w-8 h-8" alt="QuickBuy Logo" />
+              <span className="text-xl font-black text-indigo-900 uppercase italic">QuickBuy</span>
+            </Link>
+            <div className="text-sm text-gray-500 font-bold uppercase tracking-widest">© 2026 QuickBuy Pakistan</div>
+            <div className="flex gap-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              <Link to="/about" className="hover:text-indigo-600">About Us</Link>
+              <Link to="/privacy" className="hover:text-indigo-600">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-indigo-600">Terms of Service</Link>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <div className="text-xs font-black text-gray-500 uppercase tracking-widest">Get the App</div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => toast.success("App coming soon")}
+                className="hover:scale-105 transition"
+                aria-label="Get it on App Store"
+              >
+                <img src="/logos/apple store.png" alt="App Store" className="h-10 w-auto" />
+              </button>
+              <button
+                onClick={() => toast.success("App coming soon")}
+                className="hover:scale-105 transition"
+                aria-label="Get it on Google Play"
+              >
+                <img src="/logos/play store.png" alt="Google Play" className="h-10 w-auto" />
+              </button>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   )

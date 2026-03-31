@@ -2,19 +2,20 @@ import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { fetchListings } from "../lib/api.js"
 import ListingCard from "../components/ListingCard.jsx"
+import { toast } from "react-hot-toast"
 
 const CATEGORIES = [
-  { name: "Mobiles", icon: "https://www.olx.com.pk/assets/mobiles.8bc37032159080bd1d9439ca2148ad4a.png" },
-  { name: "Vehicles", icon: "https://www.olx.com.pk/assets/vehicles.29eccf7119f1f0a05f884501a403079a.png" },
-  { name: "Property", icon: "https://www.olx.com.pk/assets/property-for-sale.e3a39529944f54e803878f30ee94589d.png" },
-  { name: "Electronics", icon: "https://www.olx.com.pk/assets/electronics-home-appliances.964259e88383e742e97b415e9820524c.png" },
-  { name: "Bikes", icon: "https://www.olx.com.pk/assets/bikes.4273059434863f64024f28522e8ca92e.png" },
-  { name: "Business", icon: "https://www.olx.com.pk/assets/business-industrial-agriculture.704a6ff4f90117094258f1f7375a0651.png" },
-  { name: "Services", icon: "https://www.olx.com.pk/assets/services.0645f782c5a09b304c10a48545e8b417.png" },
-  { name: "Jobs", icon: "https://www.olx.com.pk/assets/jobs.79e5058721447e7b572e811f586b8f10.png" },
-  { name: "Animals", icon: "https://www.olx.com.pk/assets/animals.62d396440f8087796378f773b063806a.png" },
-  { name: "Furniture", icon: "https://www.olx.com.pk/assets/furniture-home-decor.31a89c3664c01f60447387e02554d393.png" },
-  { name: "Fashion", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png" },
+  { name: "Mobiles", icon: "/logos/mobile logo.png" },
+  { name: "Vehicles", icon: "/logos/car logo.png" },
+  { name: "Property", icon: "/logos/property.png" },
+  { name: "Electronics", icon: "/logos/electronics logo.png" },
+  { name: "Bikes", icon: "/logos/bike logo.png" },
+  { name: "Business", icon: "/logos/bussiness logo.png" },
+  { name: "Services", icon: "/logos/services logo.png" },
+  { name: "Jobs", icon: "/logos/jobs logo.png" },
+  { name: "Animals", icon: "/logos/animals logo.png" },
+  { name: "Furniture", icon: "/logos/furniture logo.png" },
+  { name: "Fashion", icon: "/logos/fashion logo.png" },
 ]
 
 export default function Home() {
@@ -68,8 +69,9 @@ export default function Home() {
       {/* Main Search Bar */}
       <div className="bg-white sticky top-0 z-50 border-b py-2">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-4">
-          <Link to="/" className="text-3xl font-black text-indigo-900 shrink-0 italic">
-            OLX
+          <Link to="/" className="flex items-center gap-2 group">
+            <img src="/logos/Colorful QuickBuy logo design.png" className="w-10 h-10 group-hover:scale-110 transition-transform duration-300" alt="QuickBuy Logo" />
+            <span className="text-3xl font-black bg-gradient-to-r from-indigo-900 via-indigo-600 to-indigo-900 bg-clip-text text-transparent uppercase italic tracking-tighter">QuickBuy</span>
           </Link>
           
           <div className="flex-1 flex w-full gap-2">
@@ -204,12 +206,22 @@ export default function Home() {
       <div className="bg-indigo-900 py-16 mt-20">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16">
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-4xl md:text-6xl font-black text-white mb-6 uppercase italic italic tracking-tighter">Get the OLX App</h3>
+            <h3 className="text-4xl md:text-6xl font-black text-white mb-6 uppercase italic italic tracking-tighter">Get the QuickBuy App</h3>
             <p className="text-indigo-200 text-lg md:text-xl font-bold uppercase tracking-widest">Buy, sell and find anything using the app on your mobile.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-6">
-            <img src="https://www.olx.com.pk/assets/iconAppStore_noinline.a739345fb4c14b6e40397a0505e179c0.svg" className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" alt="App Store" />
-            <img src="https://www.olx.com.pk/assets/iconGooglePlayStore_noinline.98928337859396cd039673f95b0cf5d8.svg" className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" alt="Google Play" />
+            <img 
+              src="/logos/apple store.png" 
+              className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" 
+              alt="App Store" 
+              onClick={() => toast.success("App coming soon")}
+            />
+            <img 
+              src="/logos/play store.png" 
+              className="h-14 cursor-pointer hover:scale-105 transition shadow-2xl" 
+              alt="Google Play" 
+              onClick={() => toast.success("App coming soon")}
+            />
           </div>
         </div>
       </div>

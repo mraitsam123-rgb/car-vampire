@@ -5,17 +5,17 @@ import { toast } from "react-hot-toast"
 import { useUser } from "../context/UserContext.jsx"
 
 const CATEGORIES = [
-  { name: "Mobiles", icon: "https://www.olx.com.pk/assets/mobiles.8bc37032159080bd1d9439ca2148ad4a.png" },
-  { name: "Vehicles", icon: "https://www.olx.com.pk/assets/vehicles.29eccf7119f1f0a05f884501a403079a.png" },
-  { name: "Property", icon: "https://www.olx.com.pk/assets/property-for-sale.e3a39529944f54e803878f30ee94589d.png" },
-  { name: "Electronics", icon: "https://www.olx.com.pk/assets/electronics-home-appliances.964259e88383e742e97b415e9820524c.png" },
-  { name: "Bikes", icon: "https://www.olx.com.pk/assets/bikes.4273059434863f64024f28522e8ca92e.png" },
-  { name: "Business", icon: "https://www.olx.com.pk/assets/business-industrial-agriculture.704a6ff4f90117094258f1f7375a0651.png" },
-  { name: "Services", icon: "https://www.olx.com.pk/assets/services.0645f782c5a09b304c10a48545e8b417.png" },
-  { name: "Jobs", icon: "https://www.olx.com.pk/assets/jobs.79e5058721447e7b572e811f586b8f10.png" },
-  { name: "Animals", icon: "https://www.olx.com.pk/assets/animals.62d396440f8087796378f773b063806a.png" },
-  { name: "Furniture", icon: "https://www.olx.com.pk/assets/furniture-home-decor.31a89c3664c01f60447387e02554d393.png" },
-  { name: "Fashion", icon: "https://www.olx.com.pk/assets/fashion-beauty.dd29013233866b1a3e3519c23f6631b7.png" },
+  { name: "Mobiles", icon: "/logos/mobile logo.png" },
+  { name: "Vehicles", icon: "/logos/car logo.png" },
+  { name: "Property", icon: "/logos/property.png" },
+  { name: "Electronics", icon: "/logos/electronics logo.png" },
+  { name: "Bikes", icon: "/logos/bike logo.png" },
+  { name: "Business", icon: "/logos/bussiness logo.png" },
+  { name: "Services", icon: "/logos/services logo.png" },
+  { name: "Jobs", icon: "/logos/jobs logo.png" },
+  { name: "Animals", icon: "/logos/animals logo.png" },
+  { name: "Furniture", icon: "/logos/furniture logo.png" },
+  { name: "Fashion", icon: "/logos/fashion logo.png" },
 ]
 
 const CAR_MAKES = {
@@ -25,7 +25,8 @@ const CAR_MAKES = {
   Hyundai: ["Elantra", "Tucson", "Sonata", "Santa Fe"],
   Kia: ["Sportage", "Picanto", "Stonic", "Sorento"],
   Changan: ["Alsvin", "Karvaan"],
-  MG: ["HS", "ZS", "MG5"]
+  MG: ["HS", "ZS", "MG5"],
+  Other: ["I did not find my variant"]
 }
 
 const MOBILE_BRANDS = ["Apple", "Samsung", "Vivo", "Oppo", "Infinix", "Xiaomi", "Realme", "Tecno", "Google", "Huawei"]
@@ -38,7 +39,7 @@ export default function PostAd() {
   const [category, setCategory] = useState("")
   const [form, setForm] = useState({
     title: "", price: "", city: "", description: "",
-    make: "", model: "", year: "", mileage: "", 
+    make: "", model: "", customMake: "", customModel: "", year: "", mileage: "", 
     fuelType: "Petrol", transmission: "Manual", condition: "Used",
     brand: "", storage: "128GB",
     propertyType: "House", area: "", bedrooms: "1",
@@ -75,6 +76,8 @@ export default function PostAd() {
     try {
       const payload = {
         ...form,
+        make: form.make === "Other" ? form.customMake : form.make,
+        model: form.model === "I did not find my variant" ? form.customModel : form.model,
         category,
         price: Number(form.price),
         year: form.year ? Number(form.year) : undefined,
@@ -173,17 +176,35 @@ export default function PostAd() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Make *</label>
-                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.make} onChange={e=>setForm({...form, make: e.target.value, model: ""})}>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.make} onChange={e=>setForm({...form, make: e.target.value, model: "", customMake: ""})}>
                       <option value="">Select Make</option>
                       {Object.keys(CAR_MAKES).map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
+                    {form.make === "Other" && (
+                      <input 
+                        required 
+                        placeholder="Enter car company" 
+                        className="w-full mt-2 border-2 border-gray-100 rounded-lg px-4 py-2 focus:border-indigo-900 focus:outline-none transition text-sm"
+                        value={form.customMake}
+                        onChange={e => setForm({...form, customMake: e.target.value})}
+                      />
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Model *</label>
-                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value})} disabled={!form.make}>
+                    <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value, customModel: ""})} disabled={!form.make}>
                       <option value="">Select Model</option>
                       {form.make && CAR_MAKES[form.make].map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
+                    {form.model === "I did not find my variant" && (
+                      <input 
+                        required 
+                        placeholder="Enter model/variant" 
+                        className="w-full mt-2 border-2 border-gray-100 rounded-lg px-4 py-2 focus:border-indigo-900 focus:outline-none transition text-sm"
+                        value={form.customModel}
+                        onChange={e => setForm({...form, customModel: e.target.value})}
+                      />
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">

@@ -1,5 +1,6 @@
+import { Toaster, toast } from "react-hot-toast"
+import { useEffect, useState } from "react"
 import { Routes, Route, Navigate, Link, useNavigate } from "react-router-dom"
-import { Toaster } from "react-hot-toast"
 import Home from "./pages/Home.jsx"
 import Listings from "./pages/Listings.jsx"
 import ListingDetail from "./pages/ListingDetail.jsx"
@@ -10,7 +11,17 @@ import Forgot from "./pages/Forgot.jsx"
 import Dashboard from "./pages/Dashboard.jsx"
 import Chats from "./pages/Chats.jsx"
 import Profile from "./pages/Profile.jsx"
+import Favorites from "./pages/Favorites.jsx"
+import Notifications from "./pages/Notifications.jsx"
+import About from "./pages/About.jsx"
+import Privacy from "./pages/Privacy.jsx"
+import Terms from "./pages/Terms.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
+import ErrorBoundary from "./components/ErrorBoundary.jsx"
+import NotificationDropdown from "./components/NotificationDropdown.jsx"
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "./lib/api.js"
+
+import { io } from "socket.io-client"
 
 const Protected = ({ children }) => {
   const token = localStorage.getItem("accessToken")
@@ -21,6 +32,41 @@ const Protected = ({ children }) => {
 function AppContent() {
   const { me, logout, loading } = useUser()
   const navigate = useNavigate()
+  const [notifications, setNotifications] = useState([])
+  const [showNotifs, setShowNotifs] = useState(false)
+
+  useEffect(() => {
+    if (!me) return
+    
+    // Initial fetch
+    getNotifications().then(setNotifications)
+
+    const token = localStorage.getItem("accessToken")
+    const socket = io(import.meta.env.VITE_API_URL || "", { auth: { token } })
+
+    socket.on("notification", (data) => {
+      setNotifications(prev => [data, ...prev])
+      toast.success(`New Message: ${data.text.slice(0, 30)}...`, {
+        icon: '💬',
+        duration: 4000,
+        onClick: () => navigate(data.link || "/chats")
+      })
+    })
+
+    return () => socket.disconnect()
+  }, [me, navigate])
+
+  const unreadCount = notifications?.filter(n => !n.isRead).length
+
+  const handleMarkRead = async (id) => {
+    await markNotificationAsRead(id)
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n))
+  }
+
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsAsRead()
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+  }
 
   const handleLogout = () => {
     logout()
@@ -34,15 +80,35 @@ function AppContent() {
       <Toaster position="top-right" />
       <header className="sticky top-0 z-10 bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <Link to="/" className="text-2xl font-bold text-indigo-900 shrink-0 hidden md:block">OLX</Link>
+          <Link to="/" className="flex items-center gap-2 group">
+            <img src="/logos/Colorful QuickBuy logo design.png" className="w-10 h-10 group-hover:rotate-12 transition-transform duration-300" alt="QuickBuy Logo" />
+            <span className="text-3xl font-black bg-gradient-to-r from-indigo-900 via-indigo-600 to-indigo-900 bg-clip-text text-transparent uppercase italic tracking-tighter">QuickBuy</span>
+          </Link>
           <div className="ml-auto flex items-center gap-6">
             {me && (
               <>
                 <Link to="/chats" className="text-2xl hover:text-indigo-600 transition">💬</Link>
-                <button className="text-2xl hover:text-indigo-600 transition relative">
-                  🔔
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">2</span>
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowNotifs(!showNotifs)}
+                    className="text-2xl hover:text-indigo-600 transition relative"
+                  >
+                    🔔
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-black animate-pulse">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {showNotifs && (
+                    <NotificationDropdown 
+                      notifications={notifications}
+                      onMarkAsRead={handleMarkRead}
+                      onMarkAllRead={handleMarkAllRead}
+                      onClose={() => setShowNotifs(false)}
+                    />
+                  )}
+                </div>
               </>
             )}
             {!me && (
@@ -77,11 +143,49 @@ function AppContent() {
           <Route path="/forgot" element={<Forgot />} />
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/chats" element={<Protected><Chats /></Protected>} />
-          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/chats/:chatId" element={<Protected><Chats /></Protected>} />
+          <Route path="/profile/:id" element={<Protected><Profile /></Protected>} />
+          <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
+          <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </main>
       <footer className="bg-white border-t">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-sm text-gray-500">© Car Garage</div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <Link to="/" className="flex items-center gap-2">
+              <img src="/logos/Colorful QuickBuy logo design.png" className="w-8 h-8" alt="QuickBuy Logo" />
+              <span className="text-xl font-black text-indigo-900 uppercase italic">QuickBuy</span>
+            </Link>
+            <div className="text-sm text-gray-500 font-bold uppercase tracking-widest">© 2026 QuickBuy Pakistan</div>
+            <div className="flex gap-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              <Link to="/about" className="hover:text-indigo-600">About Us</Link>
+              <Link to="/privacy" className="hover:text-indigo-600">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-indigo-600">Terms of Service</Link>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <div className="text-xs font-black text-gray-500 uppercase tracking-widest">Get the App</div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => toast.success("App coming soon")}
+                className="hover:scale-105 transition"
+                aria-label="Get it on App Store"
+              >
+                <img src="/logos/apple store.png" alt="App Store" className="h-10 w-auto" />
+              </button>
+              <button
+                onClick={() => toast.success("App coming soon")}
+                className="hover:scale-105 transition"
+                aria-label="Get it on Google Play"
+              >
+                <img src="/logos/play store.png" alt="Google Play" className="h-10 w-auto" />
+              </button>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   )
@@ -89,8 +193,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
+    <ErrorBoundary>
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </ErrorBoundary>
   )
 }

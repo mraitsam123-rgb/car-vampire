@@ -15,7 +15,10 @@ export const UserProvider = ({ children }) => {
       return
     }
     getMe(token)
-      .then((r) => setMe(r.user))
+      .then((r) => {
+        if (r?.user) setMe(r.user)
+        else setMe(null)
+      })
       .catch(() => {
         localStorage.removeItem("accessToken")
         setMe(null)

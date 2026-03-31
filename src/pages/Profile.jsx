@@ -90,8 +90,16 @@ export default function Profile() {
                 )}
               </div>
               <div className="pb-2">
-                <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{formData.name || "User Profile"}</h1>
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Member since {new Date().getFullYear()}</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{formData.name || "User Profile"}</h1>
+                  {me?.createdAt && new Date(me.createdAt).getFullYear() <= 2024 && (
+                    <span className="bg-indigo-900 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Original</span>
+                  )}
+                </div>
+                <div className="flex gap-4 mt-1">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Member since {me?.createdAt ? new Date(me.createdAt).getFullYear() : new Date().getFullYear()}</p>
+                  <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest border-l pl-4 border-gray-200">Total Ads: {me?.adsCount || 0}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -99,14 +107,22 @@ export default function Profile() {
           <div className="pt-20 px-8 pb-10">
             <div className="flex justify-between items-center mb-8 border-b pb-4">
               <h2 className="text-xl font-black text-indigo-900 uppercase italic">Personal Information</h2>
-              {isOwnProfile && !isEditing && (
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="px-6 py-2 border-2 border-indigo-900 text-indigo-900 font-bold rounded-full hover:bg-indigo-50 transition"
+              <div className="flex gap-4 items-center">
+                <Link 
+                  to="/favorites"
+                  className="px-6 py-2 bg-red-50 text-red-600 font-bold rounded-full hover:bg-red-100 transition flex items-center gap-2 shadow-sm"
                 >
-                  Edit Profile
-                </button>
-              )}
+                  ❤️ My Favorites
+                </Link>
+                {isOwnProfile && !isEditing && (
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className="px-6 py-2 border-2 border-indigo-900 text-indigo-900 font-bold rounded-full hover:bg-indigo-50 transition"
+                  >
+                    Edit Profile
+                  </button>
+                )}
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">

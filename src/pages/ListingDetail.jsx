@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
-import { getListing, toggleFavorite, fetchListings, getReviews, addReview, startChat } from "../lib/api.js"
+import { getListing, toggleFavorite, fetchListings, getReviews, addReview, startChat, reportListing } from "../lib/api.js"
 import { useUser } from "../context/UserContext.jsx"
 import { toast } from "react-hot-toast"
 import ListingCard from "../components/ListingCard.jsx"
@@ -13,6 +13,7 @@ export default function ListingDetail() {
   const [similarItems, setSimilarItems] = useState([])
   const [activeImage, setActiveImage] = useState(0)
   const [daysLeft, setDaysLeft] = useState(null)
+  const [postedDate, setPostedDate] = useState("")
   const [showPhone, setShowPhone] = useState(false)
 
   const [reviews, setReviews] = useState([])
@@ -25,11 +26,21 @@ export default function ListingDetail() {
       if (!r) return
       setItem(r)
       
-      // Calculate days left for 30-day expiry
-      if (r.expiresAt) {
-        const diff = new Date(r.expiresAt) - new Date()
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-        setDaysLeft(days > 0 ? days : 0)
+      // Calculate real-time dynamic date/expiry
+      if (r.createdAt) {
+        const created = new Date(r.createdAt)
+        const now = new Date()
+        const diffTime = Math.abs(now - created)
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays === 0) setPostedDate("Today")
+        else if (diffDays === 1) setPostedDate("Yesterday")
+        else setPostedDate(`${diffDays} days ago`)
+
+        // Expiry (30 days from creation)
+        const expiry = new Date(created.getTime() + 30 * 24 * 60 * 60 * 1000)
+        const remaining = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24))
+        setDaysLeft(remaining > 0 ? remaining : 0)
       }
 
       // Fetch similar ads
@@ -166,9 +177,15 @@ export default function ListingDetail() {
                 <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
                   <span className="flex items-center gap-1">📍 {item?.city}</span>
                   <span>•</span>
-                  <span>{item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</span>
+                  <span>{item?.createdAt ? new Date(item.createdAt).toLocaleDateString("en-GB", { day: 'numeric', month: 'long', year: 'numeric' }) : ""}</span>
                   <span>•</span>
-                  <span>{daysLeft !== null ? `${daysLeft} days ago` : ""}</span>
+                  <span className="text-indigo-600">{postedDate}</span>
+                  <span>•</span>
+                  {daysLeft !== null && (
+                    <span className={`px-2 py-0.5 rounded-full ${daysLeft <= 5 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-green-100 text-green-600'}`}>
+                      {daysLeft} days remaining
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-4">
@@ -360,20 +377,62 @@ export default function ListingDetail() {
             </div>
             
             <div className="mt-6 pt-6 border-t flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              <span>AD ID: {item._id?.slice(-10).toUpperCase()}</span>
-              <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                � Report this ad
+              <span>AD ID: {item._id?.toUpperCase()}</span>
+              <button 
+                onClick={async () => {
+                  const reason = prompt("Why are you reporting this ad?");
+                  if (reason) {
+                    try {
+                      await reportListing(item._id, reason);
+                      toast.success("Ad reported successfully. We will review it.");
+                    } catch (err) {
+                      toast.error("Failed to report ad");
+                    }
+                  }
+                }}
+                className="flex items-center gap-1 hover:text-red-500 transition-colors"
+              >
+                🚩 Report this ad
               </button>
             </div>
           </div>
 
           <div className="bg-white border rounded p-6 shadow-sm">
             <h4 className="font-black mb-4 uppercase text-[10px] text-gray-400 tracking-widest">Posted in</h4>
-            <div className="text-sm font-black text-indigo-900 mb-4 flex items-center gap-2">
-              <span className="text-lg">📍</span> {item.city}
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-black text-indigo-900 flex items-center gap-2">
+                <span className="text-lg">📍</span> {item.city}
+              </div>
+              <button 
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        toast.success("Location fetched! Pinning on map...");
+                      },
+                      () => toast.error("Could not fetch location")
+                    );
+                  }
+                }}
+                className="text-[10px] font-black text-indigo-600 hover:underline uppercase tracking-tighter"
+              >
+                Use Current Location
+              </button>
             </div>
-            <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-300 font-black uppercase text-[10px] tracking-widest border-2 border-dashed border-gray-100">
-              Map View Placeholder
+            <div className="w-full aspect-video bg-gray-50 rounded-xl overflow-hidden border-2 border-gray-100 relative group">
+              <iframe
+                title="Google Map"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(item.city)}`}
+                allowFullScreen
+              ></iframe>
+              <div className="absolute inset-0 bg-indigo-900/5 flex flex-col items-center justify-center text-indigo-900/40 pointer-events-none group-hover:bg-transparent transition-all">
+                <span className="text-4xl mb-2">📍</span>
+                <p className="text-[10px] font-black uppercase tracking-widest">{item.city}</p>
+              </div>
             </div>
           </div>
         </div>
