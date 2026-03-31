@@ -13,6 +13,9 @@ export default function Profile() {
   const [activeAdsCount, setActiveAdsCount] = useState(0)
   const [favAds, setFavAds] = useState([])
   const [activeTab, setActiveTab] = useState("info") // 'info', 'ads', 'favorites'
+  const [formData, setFormData] = useState({ name: "", phone: "", city: "", address: "", avatar: "" })
+  const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     // Determine profile identity
