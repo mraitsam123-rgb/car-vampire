@@ -88,11 +88,12 @@ function AppContent() {
           <div className="ml-auto flex items-center gap-6">
             {me && (
               <>
-                <Link to="/chats" className="text-2xl hover:text-indigo-600 transition">💬</Link>
-                <div className="relative">
+                <Link to="/favorites" className="text-2xl hover:text-red-500 transition" title="Favorites">❤️</Link>
+                <Link to="/chats" className="text-2xl hover:text-indigo-600 transition" title="Messages">💬</Link>
+                <div>
                   <button 
                     onClick={() => setShowNotifs(!showNotifs)}
-                    className="text-2xl hover:text-indigo-600 transition relative"
+                    className="text-2xl hover:text-indigo-600 transition relative z-[60]"
                   >
                     🔔
                     {unreadCount > 0 && (
@@ -102,12 +103,17 @@ function AppContent() {
                     )}
                   </button>
                   {showNotifs && (
-                    <NotificationDropdown 
-                      notifications={notifications}
-                      onMarkAsRead={handleMarkRead}
-                      onMarkAllRead={handleMarkAllRead}
-                      onClose={() => setShowNotifs(false)}
-                    />
+                    <>
+                      <div className="fixed inset-0 bg-white/80 backdrop-blur-md z-[50]" onClick={() => setShowNotifs(false)}></div>
+                      <div className="absolute right-0 mt-2 top-full z-[60]">
+                        <NotificationDropdown 
+                          notifications={notifications}
+                          onMarkAsRead={handleMarkRead}
+                          onMarkAllRead={handleMarkAllRead}
+                          onClose={() => setShowNotifs(false)}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
               </>
@@ -164,8 +170,10 @@ function AppContent() {
             <div className="text-sm text-gray-500 font-bold uppercase tracking-widest">© 2026 QuickBuy Pakistan</div>
             <div className="flex gap-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">
               <Link to="/about" className="hover:text-indigo-600">About Us</Link>
-              <Link to="/privacy" className="hover:text-indigo-600">Privacy Policy</Link>
-              <Link to="/terms" className="hover:text-indigo-600">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-indigo-600">Privacy</Link>
+              <Link to="/terms" className="hover:text-indigo-600">Terms</Link>
+              <Link to="/favorites" className="hover:text-red-500 transition">❤️ Favorites</Link>
+              <Link to="/chats" className="hover:text-indigo-600 transition">💬 Messages</Link>
             </div>
           </div>
           <div className="mt-6 flex flex-col items-center gap-3">
