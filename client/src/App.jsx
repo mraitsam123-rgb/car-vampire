@@ -14,6 +14,9 @@ import Profile from "./pages/Profile.jsx"
 import About from "./pages/About.jsx"
 import Privacy from "./pages/Privacy.jsx"
 import Terms from "./pages/Terms.jsx"
+import Favorites from "./pages/Favorites.jsx"
+import Notifications from "./pages/Notifications.jsx"
+import Report from "./pages/Report.jsx"
 import { UserProvider, useUser } from "./context/UserContext.jsx"
 import ErrorBoundary from "./components/ErrorBoundary.jsx"
 import NotificationDropdown from "./components/NotificationDropdown.jsx"
@@ -146,6 +149,9 @@ function AppContent() {
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
+          <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+          <Route path="/report/:id" element={<Protected><Report /></Protected>} />
         </Routes>
       </main>
       <footer className="bg-white border-t">

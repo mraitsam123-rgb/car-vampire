@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useUser } from "../context/UserContext.jsx"
 import { toggleFavorite } from "../lib/api.js"
@@ -7,8 +8,19 @@ export default function ListingCard({ it }) {
   const { me, setMe } = useUser()
   const isFav = me?.favorites?.includes(it._id)
 
+  const [daysAgo, setDaysAgo] = useState(0)
+
+  useEffect(() => {
+    if (it.createdAt) {
+      const diffTime = Math.abs(new Date() - new Date(it.createdAt))
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      setDaysAgo(diffDays)
+    }
+  }, [it.createdAt])
+
   const handleToggleFav = async (e) => {
     e.preventDefault()
+    e.stopPropagation()
     if (!me) return toast.error("Please login to favorite")
     try {
       const { favorites } = await toggleFavorite(it._id)
@@ -56,7 +68,15 @@ export default function ListingCard({ it }) {
 
         <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider">
           <span>{it.city}</span>
-          <span>{new Date(it.createdAt).toLocaleDateString()}</span>
+          <span>{daysAgo === 0 ? "Today" : `${daysAgo} days ago`}</span>
+        </div>
+        <div className="text-[10px] text-gray-400 mt-2 border-t pt-1 flex justify-between">
+          <span>ID: {'QB-' + it._id?.toString().slice(-6).toUpperCase()}</span>
+          {it.expiresAt && (
+            <span className={daysAgo > 25 ? "text-red-500" : ""}>
+               Exp: {Math.max(0, 30 - daysAgo)} days left
+            </span>
+          )}
         </div>
       </div>
     </Link>

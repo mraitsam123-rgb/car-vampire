@@ -13,7 +13,9 @@ export default function ListingDetail() {
   const [similarItems, setSimilarItems] = useState([])
   const [activeImage, setActiveImage] = useState(0)
   const [daysLeft, setDaysLeft] = useState(null)
+  const [daysAgo, setDaysAgo] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
+  const [sellerActiveAds, setSellerActiveAds] = useState(0)
 
   const [reviews, setReviews] = useState([])
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" })
@@ -25,11 +27,13 @@ export default function ListingDetail() {
       if (!r) return
       setItem(r)
       
-      // Calculate days left for 30-day expiry
-      if (r.expiresAt) {
-        const diff = new Date(r.expiresAt) - new Date()
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-        setDaysLeft(days > 0 ? days : 0)
+      // Calculate days ago
+      if (r.createdAt) {
+        const diffTime = Math.abs(new Date() - new Date(r.createdAt))
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        setDaysAgo(diffDays)
+        // 30 days expiry calculation based on user requested logic
+        setDaysLeft(Math.max(0, 30 - diffDays))
       }
 
       // Fetch similar ads
@@ -38,6 +42,17 @@ export default function ListingDetail() {
           .then(data => setSimilarItems(data?.items?.filter(i => i._id !== r._id) || []))
           .catch(() => setSimilarItems([]))
       }
+
+      // Fetch accurate active ads for seller
+      if (r.sellerId) {
+        fetchListings({ sellerId: typeof r.sellerId === 'object' ? r.sellerId._id : r.sellerId, limit: 100 })
+          .then(data => {
+            const count = data?.items?.filter(ad => ad.status === 'active' || ad.expiresAt > new Date().toISOString()).length || 0;
+            setSellerActiveAds(count)
+          })
+          .catch(() => setSellerActiveAds(0))
+      }
+
     }).catch(() => {
       setItem(null)
       toast.error("Listing not found")
@@ -157,18 +172,23 @@ export default function ListingDetail() {
                     <span className="text-[8px] font-bold text-yellow-400">({item?.reviewCount || 0})</span>
                   </div>
                   {daysLeft !== null && daysLeft <= 10 && (
-                    <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded-full uppercase">
+                    <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-1 rounded-full uppercase flex items-center gap-1">
                       ⚠️ Expiring in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
+                    </span>
+                  )}
+                  {daysLeft !== null && daysLeft > 10 && (
+                    <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded-full uppercase border border-green-200 shadow-sm flex items-center gap-1">
+                      🟢 {daysLeft} Days Remaining
                     </span>
                   )}
                 </div>
                 <p className="text-lg text-gray-700 font-bold uppercase tracking-tight">{item?.title}</p>
                 <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                  <span className="flex items-center gap-1">📍 {item?.city}</span>
+                  <span className="flex items-center gap-1">📍 {item?.city || ""}</span>
                   <span>•</span>
-                  <span>{item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</span>
+                  <span>ID: QB-{item?._id?.toString().slice(-6).toUpperCase()}</span>
                   <span>•</span>
-                  <span>{daysLeft !== null ? `${daysLeft} days ago` : ""}</span>
+                  <span>{daysAgo === 0 ? "Posted Today" : `${daysAgo} days ago`}</span>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -320,9 +340,9 @@ export default function ListingDetail() {
                     <h4 className="font-black text-lg text-indigo-900 group-hover:text-indigo-600 transition-colors truncate">{item?.sellerId?.name}</h4>
                     <span className="text-xl text-gray-300 group-hover:text-indigo-600 transition-colors">›</span>
                   </div>
-                  <div className="flex gap-4 mt-1">
-                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Member since {item?.sellerId?.createdAt ? new Date(item.sellerId.createdAt).getFullYear() : "2024"}</p>
-                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest border-l pl-4 border-gray-100">Active Ads: {Math.floor(Math.random() * 50) + 1}</p>
+                   <div className="flex gap-4 mt-1">
+                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Member since {item?.sellerId?.createdAt ? new Date(item.sellerId.createdAt).getFullYear() : "Original"}</p>
+                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest border-l pl-4 border-gray-100">Active Ads: {sellerActiveAds}</p>
                    </div>
                 </div>
               </div>
@@ -360,9 +380,9 @@ export default function ListingDetail() {
             </div>
             
             <div className="mt-6 pt-6 border-t flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              <span>AD ID: {item._id?.slice(-10).toUpperCase()}</span>
-              <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                � Report this ad
+              <span>AD ID: QB-{item._id?.slice(-6).toUpperCase()}</span>
+              <button onClick={() => navigate(`/report/${item._id}`)} className="flex items-center gap-1 hover:text-red-500 transition-colors">
+                ⚠️ Report this ad
               </button>
             </div>
           </div>
@@ -370,10 +390,17 @@ export default function ListingDetail() {
           <div className="bg-white border rounded p-6 shadow-sm">
             <h4 className="font-black mb-4 uppercase text-[10px] text-gray-400 tracking-widest">Posted in</h4>
             <div className="text-sm font-black text-indigo-900 mb-4 flex items-center gap-2">
-              <span className="text-lg">📍</span> {item.city}
+              <span className="text-lg">📍</span> {item.city} {item.location && `, ${item.location}`}
             </div>
-            <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-300 font-black uppercase text-[10px] tracking-widest border-2 border-dashed border-gray-100">
-              Map View Placeholder
+            <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-300 font-black uppercase text-[10px] tracking-widest border-2 border-dashed border-gray-100 overflow-hidden">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                className="border-none" 
+                loading="lazy" 
+                allowFullScreen
+                src={`https://www.google.com/maps?q=${encodeURIComponent(item.city + (item.location ? ` ${item.location}` : ''))}&output=embed`}
+              ></iframe>
             </div>
           </div>
         </div>
@@ -382,4 +409,3 @@ export default function ListingDetail() {
     </div>
   )
 }
-

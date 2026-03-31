@@ -37,8 +37,8 @@ export default function PostAd() {
   const [step, setStep] = useState(1)
   const [category, setCategory] = useState("")
   const [form, setForm] = useState({
-    title: "", price: "", city: "", description: "",
-    make: "", model: "", year: "", mileage: "", 
+    title: "", price: "", city: "", location: "", description: "",
+    make: "", model: "", customModel: "", year: "", mileage: "", 
     fuelType: "Petrol", transmission: "Manual", condition: "Used",
     brand: "", storage: "128GB",
     propertyType: "House", area: "", bedrooms: "1",
@@ -76,6 +76,7 @@ export default function PostAd() {
       const payload = {
         ...form,
         category,
+        model: form.model === "Other" ? form.customModel : form.model,
         price: Number(form.price),
         year: form.year ? Number(form.year) : undefined,
         mileage: form.mileage ? Number(form.mileage) : undefined,
@@ -93,6 +94,29 @@ export default function PostAd() {
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser")
+      return
+    }
+    toast.loading("Fetching location...", { id: "gps" })
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+          const data = await res.json()
+          const city = data.address?.city || data.address?.town || data.address?.state || "Unknown"
+          setForm({ ...form, city: city, location: data.display_name })
+          toast.success("Location acquired", { id: "gps" })
+        } catch (e) {
+          setForm({ ...form, city: "Current Location", location: `${pos.coords.latitude},${pos.coords.longitude}` })
+          toast.success("Coordinates acquired", { id: "gps" })
+        }
+      },
+      () => toast.error("Failed to get location", { id: "gps" })
+    )
   }
 
   if (step === 1) {
@@ -183,9 +207,16 @@ export default function PostAd() {
                     <select required className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.model} onChange={e=>setForm({...form, model: e.target.value})} disabled={!form.make}>
                       <option value="">Select Model</option>
                       {form.make && CAR_MAKES[form.make].map(m => <option key={m} value={m}>{m}</option>)}
+                      <option value="Other">I did not find my variant</option>
                     </select>
                   </div>
                 </div>
+                {form.model === "Other" && (
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Custom Variant *</label>
+                    <input required type="text" placeholder="Enter your vehicle variant" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.customModel} onChange={e=>setForm({...form, customModel: e.target.value})} />
+                  </div>
+                )}
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Year *</label>
@@ -297,8 +328,14 @@ export default function PostAd() {
             <h3 className="font-black text-indigo-900 uppercase text-xs tracking-widest">Location & Price</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">City *</label>
-                <input required placeholder="Select location" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition" value={form.city} onChange={e=>setForm({...form, city: e.target.value})} />
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase">City / Location *</label>
+                  <button type="button" onClick={handleGetCurrentLocation} className="text-[10px] font-black text-indigo-600 hover:underline uppercase flex items-center gap-1">
+                    📍 Use Current Location
+                  </button>
+                </div>
+                <input required placeholder="Select location" className="w-full border-2 border-gray-100 rounded-lg px-4 py-3 focus:border-indigo-900 focus:outline-none transition mb-2" value={form.city} onChange={e=>setForm({...form, city: e.target.value})} />
+                {form.location && <p className="text-xs text-green-600 font-black">GPS: {form.location}</p>}
               </div>
               <div className="col-span-2">
                 <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Price *</label>

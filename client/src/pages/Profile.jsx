@@ -8,19 +8,18 @@ export default function Profile() {
   const { id } = useParams()
   const { me, updateMe: setGlobalMe } = useUser()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    city: "",
-    address: "",
-    avatar: ""
-  })
+  const [profileUser, setProfileUser] = useState(null)
+  const [userAds, setUserAds] = useState([])
+  const [activeAdsCount, setActiveAdsCount] = useState(0)
+  const [favAds, setFavAds] = useState([])
+  const [activeTab, setActiveTab] = useState("info") // 'info', 'ads', 'favorites'
 
   useEffect(() => {
+    // Determine profile identity
+    let isCurrent = false;
     if (me && (me.id === id || me._id === id)) {
+      isCurrent = true;
+      setProfileUser(me)
       setFormData({
         name: me.name || "",
         phone: me.phone || "",
@@ -28,7 +27,34 @@ export default function Profile() {
         address: me.address || "",
         avatar: me.avatar || ""
       })
+    } else {
+      // In a real app we would fetch the other user's public profile here
+      // For now we'll just show what we can and rely on ads fetch.
+      // We assume public listings will give us some hints.
     }
+
+    // Fetch user ads
+    const loadListings = async () => {
+      try {
+        const { fetchListings, getListing } = await import("../lib/api.js")
+        const res = await fetchListings({ sellerId: id, limit: 100 })
+        const ads = res?.items || []
+        setUserAds(ads)
+        setActiveAdsCount(ads.filter(ad => ad.status === 'active' || ad.expiresAt > new Date().toISOString()).length)
+
+        if (isCurrent && me.favorites?.length > 0) {
+           const favPromises = me.favorites.map(fid => {
+             const actualId = typeof fid === 'object' ? (fid._id || fid.id) : fid;
+             return getListing(actualId).catch(() => null)
+           })
+           const favResults = await Promise.all(favPromises)
+           setFavAds(favResults.filter(f => f && !f.error))
+        }
+      } catch (err) {
+        console.error("Failed to load user ads for profile", err)
+      }
+    }
+    loadListings()
   }, [me, id])
 
   const isOwnProfile = me && (me.id === id || me._id === id)
@@ -47,6 +73,7 @@ export default function Profile() {
         id: res.user.id || res.user._id 
       }
       setGlobalMe(updatedUser)
+      setProfileUser(updatedUser)
       
       toast.success("Profile updated successfully")
       setIsEditing(false)
@@ -72,14 +99,14 @@ export default function Profile() {
     <div className="bg-[#f7f8f8] min-h-screen py-10">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="h-32 bg-indigo-900 relative">
-            <div className="absolute -bottom-12 left-8 flex items-end gap-6">
-              <div className="relative group">
+          <div className="h-32 bg-[#002f34] relative">
+            <div className="absolute -bottom-16 left-8 flex items-end gap-6 w-full">
+              <div className="relative group shrink-0">
                 <div className="w-32 h-32 rounded-full border-4 border-white bg-indigo-100 flex items-center justify-center text-4xl font-bold text-indigo-900 overflow-hidden shadow-lg">
                   {formData.avatar ? (
                     <img src={formData.avatar} className="w-full h-full object-cover" />
                   ) : (
-                    formData.name?.[0] || "U"
+                    formData.name?.[0] || profileUser?.name?.[0] || "U"
                   )}
                 </div>
                 {isEditing && (
@@ -89,14 +116,41 @@ export default function Profile() {
                   </label>
                 )}
               </div>
-              <div className="pb-2">
-                <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{formData.name || "User Profile"}</h1>
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Member since {new Date().getFullYear()}</p>
+              <div className="pb-2 flex-1 flex flex-col justify-end">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none">{formData.name || profileUser?.name || "User Profile"}</h1>
+                  <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded-full font-black tracking-widest uppercase border border-yellow-200">
+                    Original ({profileUser?.createdAt ? new Date(profileUser.createdAt).getFullYear() : (userAds[0]?.sellerId?.createdAt ? new Date(userAds[0]?.sellerId?.createdAt).getFullYear() : new Date().getFullYear())})
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">
+                  Total Ads: <span className="text-indigo-900">{userAds.length}</span> • Active Ads: <span className="text-green-600">{activeAdsCount}</span>
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="pt-20 px-8 pb-10">
+          <div className="pt-24 px-8 pb-10">
+            {/* Tabs */}
+            <div className="flex gap-6 border-b mb-8">
+              <button 
+                onClick={() => setActiveTab("info")}
+                className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'info' ? 'text-indigo-900 border-b-2 border-indigo-900' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                Information
+              </button>
+              {isOwnProfile && (
+                <button 
+                  onClick={() => setActiveTab("favorites")}
+                  className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'favorites' ? 'text-indigo-900 border-b-2 border-indigo-900' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Favorites ({favAds.length})
+                </button>
+              )}
+            </div>
+
+            {activeTab === 'info' && (
+              <>
             <div className="flex justify-between items-center mb-8 border-b pb-4">
               <h2 className="text-xl font-black text-indigo-900 uppercase italic">Personal Information</h2>
               {isOwnProfile && !isEditing && (
@@ -177,6 +231,33 @@ export default function Profile() {
                 </div>
               )}
             </form>
+            </>
+            )}
+
+            {activeTab === 'favorites' && isOwnProfile && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-black text-indigo-900 uppercase italic mb-6">Saved Ads</h2>
+                {favAds.length === 0 ? (
+                  <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No favorites yet.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {favAds.map(ad => {
+                      const ListingCard = require("../components/ListingCard.jsx").default;
+                      return <ListingCard key={ad._id} it={ad} />
+                    })}
+                  </div>
+                )}
+                
+                <div className="mt-8">
+                  <button 
+                    onClick={() => navigate('/favorites')}
+                    className="px-6 py-2 border-2 border-indigo-900 text-indigo-900 font-bold rounded-full hover:bg-indigo-50 transition w-full uppercase tracking-widest text-xs"
+                  >
+                    View All Favorites Full Page
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
